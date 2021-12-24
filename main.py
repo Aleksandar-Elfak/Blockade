@@ -32,6 +32,7 @@ marking = {
     "S": 27,
 }
 
+
 def tryParse(par):
     try:
         return int(par)
@@ -76,19 +77,19 @@ def startGame():
     #         print("You must choose X or O")
     #         return False
 
-    #game = Game(boardRow, boardColumn, X.split(" "), x.split(" "), O.split(" "), o.split(" "), walls, player)
-    game = Game(11, 14, ("4", "4"), ("4", "8") , ("8", "4"), ("8", "8"), 9, "x")
-    game.showBoard()
-    game.humanMove()
+    # game = Game(boardRow, boardColumn, X.split(" "), x.split(" "), O.split(" "), o.split(" "), walls, player)
+    game = Game(11, 14, ("4", "4"), ("4", "8"), ("8", "4"), ("8", "8"), 9, "x")
+    game.play()
 
 
 def validParameters(pos, marking, boardRow, boardColumn):
     tmpPos = pos.split(" ")
     if (
         len(tmpPos) != 2
-        or marking.get(tmpPos[0]) == None or marking.get(tmpPos[0]) >= boardRow
-        or marking.get(tmpPos[1]) == None or marking.get(tmpPos[1]) >= boardColumn
-        
+        or marking.get(tmpPos[0]) == None
+        or marking.get(tmpPos[0]) >= boardRow
+        or marking.get(tmpPos[1]) == None
+        or marking.get(tmpPos[1]) >= boardColumn
     ):
         return False
     return True

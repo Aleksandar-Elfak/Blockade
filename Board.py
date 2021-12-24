@@ -72,28 +72,35 @@ class Board:
             "S": 27,
         }
 
-        adjustedIndex = (marking.get(index[0]) * 2, marking.get(index[1]) * 2)
+        adjustedIndex = (
+            marking.get(index[0]) * 2 if marking.get(index[0]) != None else -1,
+            marking.get(index[1]) * 2 if marking.get(index[1]) != None else -1,
+        )
 
         return adjustedIndex
 
-    def isEnd(self, player):
-        if player == "X":
-            if (
-                self.current_x1 == self.start_o1
-                or self.current_x1 == self.start_o2
-                or self.current_x2 == self.start_o1
-                or self.current_x2 == self.start_o2
-            ):
-                return 1
-        else:
-            if (
-                self.current_o1 == self.start_x1
-                or self.current_o1 == self.start_x2
-                or self.current_o2 == self.start_x1
-                or self.current_o2 == self.start_x2
-            ):
-                return -1
-        return 0
+    def isEnd(self):
+        if (
+            self.current_x1 == self.start_o1
+            or self.current_x1 == self.start_o2
+            or self.current_x2 == self.start_o1
+            or self.current_x2 == self.start_o2
+        ):
+            print("")
+            print("Player X won!")
+            print("")
+            return True
+        if (
+            self.current_o1 == self.start_x1
+            or self.current_o1 == self.start_x2
+            or self.current_o2 == self.start_x1
+            or self.current_o2 == self.start_x2
+        ):
+            print("")
+            print("Player O won!")
+            print("")
+            return True
+        return False
 
     def showBoard(self):
         marking = [
@@ -167,15 +174,19 @@ class Board:
         print("")
 
     def changeState(self, pawn, move, wall):
-        currentPosition = (
-            self.current_x1
-            if pawn == "X"
-            else self.current_x2
-            if pawn == "x"
-            else self.current_o1
-            if pawn == "O"
-            else self.current_o2
-        )
+        currentPosition = None
+        if pawn == "X":
+            currentPosition = self.current_x1
+            self.current_x1 = move
+        elif pawn == "x":
+            currentPosition = self.current_x2
+            self.current_x2 = move
+        elif pawn == "O":
+            currentPosition = self.current_o1
+            self.current_o1 = move
+        elif pawn == "o":
+            currentPosition = self.current_o2
+            self.current_o2 = move
 
         self.matrix[move[0]][move[1]] = pawn
 
@@ -199,20 +210,30 @@ class Board:
     def validParameters(self, move, wall):
 
         adjustedMove = self.adjustIndex(move)
+        if adjustedMove[0] == -1 or adjustedMove[1] == -1:
+            print("Invalid input[a1]: Pawn coordinates are not valid.")
+            return False
         adjustedWall = self.adjustIndex((wall[1], wall[2]))
+        if adjustedWall[0] == -1 or adjustedWall[1] == -1:
+            print("Invalid input[a2]: Wall coordinates are not valid.")
+            return False
         adjustedWall = (wall[0], adjustedWall[0], adjustedWall[1])
 
         # provera indeksa u obliku broja
         if not (adjustedMove[0] != None and adjustedMove[0] < self.row):
+            print("Invalid input[a3]: Pawn coordinates are not valid.")
             return False
 
         if not (adjustedMove[1] != None and adjustedMove[1] < self.column):
+            print("Invalid input[a4]: Pawn coordinates are not valid.")
             return False
 
         if not (adjustedWall[1] != None and adjustedWall[1] < self.row - 2):
+            print("Invalid input[a5]: Wall coordinates are not valid.")
             return False
 
         if not (adjustedWall[2] != None and adjustedWall[2] < self.column - 2):
+            print("Invalid input[a6]: Wall coordinates are not valid.")
             return False
 
         return (adjustedMove, adjustedWall)
@@ -255,8 +276,8 @@ class Board:
             return [
                 (currentPosition[0] + 1, currentPosition[1]),
                 (currentPosition[0] + 2, currentPosition[1] + 1),
-                (currentPosition[0], currentPosition[1] + 1),
                 (currentPosition[0] + 1, currentPosition[1] + 2),
+                (currentPosition[0], currentPosition[1] + 1),
             ]
         # dole levo
         elif (currentPosition[0] + 2 == targetPosition[0]) and (
@@ -265,8 +286,8 @@ class Board:
             return [
                 (currentPosition[0] + 1, currentPosition[1]),
                 (currentPosition[0] + 2, currentPosition[1] - 1),
-                (currentPosition[0], currentPosition[1] - 1),
                 (currentPosition[0] + 1, currentPosition[1] - 2),
+                (currentPosition[0], currentPosition[1] - 1),
             ]
         # gore desno
         elif (currentPosition[0] - 2 == targetPosition[0]) and (
@@ -275,8 +296,8 @@ class Board:
             return [
                 (currentPosition[0] - 1, currentPosition[1]),
                 (currentPosition[0] - 2, currentPosition[1] + 1),
-                (currentPosition[0], currentPosition[1] + 1),
                 (currentPosition[0] - 1, currentPosition[1] + 2),
+                (currentPosition[0], currentPosition[1] + 1),
             ]
         # gore levo
         elif (currentPosition[0] - 2 == targetPosition[0]) and (
@@ -284,9 +305,9 @@ class Board:
         ):
             return [
                 (currentPosition[0] - 1, currentPosition[1]),
+                (currentPosition[0] - 1, currentPosition[1] - 2),
                 (currentPosition[0] - 2, currentPosition[1] - 1),
                 (currentPosition[0], currentPosition[1] - 1),
-                (currentPosition[0] - 1, currentPosition[1] - 2),
             ]
 
     def validMove(self, pawn, move, wall):
@@ -301,26 +322,39 @@ class Board:
             else self.current_o2
         )
 
+        # uzimaju se ciljna stanja trenutnog igraca radi lakse provere
         finish = None
         if pawn == "X" or pawn == "x":
             finish = (self.start_o1, self.start_o2)
         else:
             finish = (self.start_x1, self.start_x2)
 
+        # provera da li je slobodno mesto za zid
         if wall != None:
+            self.tmpMatrix = copy.deepcopy(self.matrix)
 
             if wall[0] == "G":
                 if (
                     self.matrix[wall[1]][wall[2] + 1] == "ǁ"
                     or self.matrix[wall[1] + 2][wall[2] + 1] == "ǁ"
                 ):
+                    print("Invalid move[a]: There is already a wall on that spot.")
                     return False
+                self.tmpMatrix[wall[1]][wall[2] + 1] = verticalWall
+                self.tmpMatrix[wall[1] + 2][wall[2] + 1] = verticalWall
             else:
                 if (
                     self.matrix[wall[1] + 1][wall[2]] == "═"
                     or self.matrix[wall[1] + 1][wall[2] + 2] == "═"
                 ):
+                    print("Invalid move[b]: There is already a wall on that spot.")
                     return False
+                self.tmpMatrix[wall[1] + 1][wall[2]] = horisontalWall
+                self.tmpMatrix[wall[1] + 1][wall[2] + 2] = horisontalWall
+
+            if self.blockedPath() == False:
+                print("Invalid move[c]: Path to the finish is blocked.")
+                return False
 
         # da li se na nasem putu nalazi zid
         # da li se krecemo horizontalno
@@ -332,43 +366,46 @@ class Board:
             or self.matrix[move[0]][move[1]] == "X"
             or self.matrix[move[0]][move[1]] == "o"
             or self.matrix[move[0]][move[1]] == "O"
-        ) and (move != finish[0] or move != finish[1]):
+        ) and (move != finish[0] and move != finish[1]):
+            print("Invalid move[d]: Pawn can not be moved on a taken space.")
             return False
 
         # pokusaj pomeranja za jedno polje
         if abs(currentPosition[0] - move[0]) + abs(currentPosition[1] - move[1]) == 2:
 
-            # da li je sledece polje zapravo ciljno polje
             path = self.getPath(currentPosition, move)
             if (
-                self.matrix[path[0][0]][path[0][1]] != "═"
-                and self.matrix[path[0][0]][path[0][1]] != "ǁ"
+                self.matrix[path[0][0]][path[0][1]] == "═"
+                or self.matrix[path[0][0]][path[0][1]] == "ǁ"
             ):
+                print("Invalid move[e]: Pawn is blocked by a wall.")
                 return False
 
+            # da li je sledece polje zapravo ciljno polje
             if move == finish[0] or move == finish[1]:
                 return True
 
             if (
-                self.matrix[path[1][0]][path[1][1]] != "═"
-                and self.matrix[path[1][0]][path[1][1]] != "ǁ"
+                self.matrix[path[1][0]][path[1][1]] == "═"
+                or self.matrix[path[1][0]][path[1][1]] == "ǁ"
             ):
+                print("Invalid move[f]: Pawn can not be moved only one space.")
                 return False
 
+            # da li se na dva polja nalazi protivnicki igrac
             if (
                 path[2] == self.current_o1
                 or path[2] == self.current_o2
                 or path[2] == self.current_x1
                 or path[2] == self.current_x2
             ):
-                return False
-            return True
-
-        # da li se na dva polja nalazi protivnicki igrac
-        # da li je ispred protivnickog igraca zid
+                return True
+            print("Invalid move[g]: Pawn can not be moved only one space.")
+            return False
 
         # da li se pomeramo za dva mesta
         if abs(currentPosition[0] - move[0]) + abs(currentPosition[1] - move[1]) != 4:
+            print("Invalid move[h]: Pawn must be moved two spaces.")
             return False
 
         path = self.getPath(currentPosition, move)
@@ -390,28 +427,37 @@ class Board:
                 and self.matrix[path[3][0]][path[3][1]] != "ǁ"
             ):
                 return True
+
+        print("Invalid move[i]: Pawn's jump is blocked by a wall.")
         return False
 
     def blockedPath(self):
-        # pawnX = 0
-        # pawnO = 0
-        # targetX = 0
-        # targetO = 0
+        # pawnX == result[0]
+        # pawnO == result[1]
+        # targetX == result[2]
+        # targetO == result[3]
 
-        self.tmpMatrix = copy.deepcopy(self.matrix)
+        # oblast u koju se nalazi cilj za 0
         result = self.floodFill(self.start_x1)
+
+        # da li su u oblast u koju se nalazi cilj za 0 svi pesaci i ciljevi oxa
         if result[3] == 2 and result[1] == 2:
+            # da li su u oblast u koju se nalazi cilj za 0 svi pesaci i ciljevi ixa
             if result[0] == 2 and result[2] == 2:
-                return True
+                return True  # stanje je validno ( ima putanje za svakog pesaka )
+            # da li je u oblast u koju se nalazi cilj za 0 zarobljen neki element ixa
             elif result[0] > 0 or result[2] > 0:
                 return False
+            # u oblast u koju se nalazi cilj za 0 ne postoji ni jedan element ixa
             else:
+                # oblast u koju se nalazi cilj za x
                 result = self.floodFill(self.start_o1)
+                # da li su svi elementi ixa u oblasti gde se nalazi cilj za x
                 if result[0] == 2 and result[2] == 2:
                     return True
         return False
 
-    def floodFill(self, start: tuple(int, int)):
+    def floodFill(self, start):
         # pawnX = 0
         # pawnO = 0
         # targetX = 0
@@ -485,7 +531,7 @@ class Board:
             and start[1] - 2 >= 0
             and self.tmpMatrix[start[0] - 2][start[1] - 2] != "!"
         ):
-            path = self.getPath(start, (start[0] - 2, start[0] - 2))
+            path = self.getPath(start, (start[0] - 2, start[1] - 2))
 
             if (
                 self.tmpMatrix[path[0][0]][path[0][1]] != horisontalWall
@@ -508,7 +554,7 @@ class Board:
             and start[1] + 2 < self.column
             and self.tmpMatrix[start[0] - 2][start[1] + 2] != "!"
         ):
-            path = self.getPath(start, (start[0] - 2, start[0] + 2))
+            path = self.getPath(start, (start[0] - 2, start[1] + 2))
 
             if (
                 self.tmpMatrix[path[0][0]][path[0][1]] != horisontalWall
@@ -532,7 +578,7 @@ class Board:
             and start[1] - 2 >= 0
             and self.tmpMatrix[start[0] + 2][start[1] - 2] != "!"
         ):
-            path = self.getPath(start, (start[0] + 2, start[0] - 2))
+            path = self.getPath(start, (start[0] + 2, start[1] - 2))
 
             if (
                 self.tmpMatrix[path[0][0]][path[0][1]] != horisontalWall
@@ -555,7 +601,7 @@ class Board:
             and start[1] + 2 < self.column
             and self.tmpMatrix[start[0] + 2][start[1] + 2] != "!"
         ):
-            path = self.getPath(start, (start[0] + 2, start[0] + 2))
+            path = self.getPath(start, (start[0] + 2, start[1] + 2))
 
             if (
                 self.tmpMatrix[path[0][0]][path[0][1]] != horisontalWall
