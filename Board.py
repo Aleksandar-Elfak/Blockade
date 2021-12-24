@@ -1,3 +1,8 @@
+import copy
+
+verticalWall = "ǁ"
+horisontalWall = "═"
+
 
 class Board:
     row = 0
@@ -11,7 +16,7 @@ class Board:
     current_x2 = None
     current_o2 = None
     matrix = None
-   
+    tmpMatrix = None
 
     def __init__(self, row, column, start_x1, start_x2, start_o1, start_o2):
         self.row = row * 2 - 1
@@ -34,8 +39,6 @@ class Board:
         self.matrix[self.start_o1[0]][self.start_o1[1]] = "O"
         self.matrix[self.start_x2[0]][self.start_x2[1]] = "x"
         self.matrix[self.start_o2[0]][self.start_o2[1]] = "o"
-       
-       
 
     def adjustIndex(self, index):
         marking = {
@@ -177,18 +180,12 @@ class Board:
         self.matrix[move[0]][move[1]] = pawn
 
         if currentPosition == self.start_x1 or currentPosition == self.start_x2:
-            self.matrix[currentPosition[0]][
-                currentPosition[1] 
-            ] = "⋆"
+            self.matrix[currentPosition[0]][currentPosition[1]] = "⋆"
         else:
             if currentPosition == self.start_o1 or currentPosition == self.start_o2:
-                self.matrix[currentPosition[0]][
-                    currentPosition[1]
-                ] = "0"
+                self.matrix[currentPosition[0]][currentPosition[1]] = "0"
             else:
-                self.matrix[currentPosition[0]][
-                    currentPosition[1]
-                ] = " "
+                self.matrix[currentPosition[0]][currentPosition[1]] = " "
 
         if wall != None:
 
@@ -222,27 +219,71 @@ class Board:
 
     def getPath(self, currentPosition, targetPosition):
         putanja = list()
-        #da li se krecemo vertikalno
-        if(currentPosition[1] == targetPosition[1]):
-            if(currentPosition[0] > targetPosition[0]):
-                return [(currentPosition[0] - 1, currentPosition[1]), (currentPosition[0] - 3, currentPosition[1]), (currentPosition[0] - 4, currentPosition[1])]
+        # da li se krecemo vertikalno
+        if currentPosition[1] == targetPosition[1]:
+            if currentPosition[0] > targetPosition[0]:
+                return [
+                    (currentPosition[0] - 1, currentPosition[1]),
+                    (currentPosition[0] - 3, currentPosition[1]),
+                    (currentPosition[0] - 4, currentPosition[1]),
+                ]
             else:
-                return [(currentPosition[0] + 1, currentPosition[1]), (currentPosition[0] + 3, currentPosition[1]), (currentPosition[0] + 4, currentPosition[1])]
+                return [
+                    (currentPosition[0] + 1, currentPosition[1]),
+                    (currentPosition[0] + 3, currentPosition[1]),
+                    (currentPosition[0] + 4, currentPosition[1]),
+                ]
         # da li se krecemo horizontalno
-        elif (currentPosition[0] == targetPosition[0]):
-            if(currentPosition[1] > targetPosition[1]):
-                return [(currentPosition[0] , currentPosition[1] - 1), (currentPosition[0], currentPosition[1] - 3), (currentPosition[0], currentPosition[1] - 4)]
+        elif currentPosition[0] == targetPosition[0]:
+            if currentPosition[1] > targetPosition[1]:
+                return [
+                    (currentPosition[0], currentPosition[1] - 1),
+                    (currentPosition[0], currentPosition[1] - 3),
+                    (currentPosition[0], currentPosition[1] - 4),
+                ]
             else:
-                return [(currentPosition[0] , currentPosition[1] + 1), (currentPosition[0] , currentPosition[1] + 3), (currentPosition[0], currentPosition[1] + 4)]
-        #da li se krecemo dijagonalno
-        if(currentPosition[0] + 2 == targetPosition[0]) and (currentPosition[1] + 2 == targetPosition[1]):
-            return[(currentPosition[0], currentPosition[1] + 1), (currentPosition[0] + 1, currentPosition[1] + 2),  (currentPosition[0] + 1, currentPosition[1]), (currentPosition[0] + 2, currentPosition[1] + 1)]
-        elif (currentPosition[0] + 2 == targetPosition[0]) and (currentPosition[1] - 2 == targetPosition[1]):
-            return[(currentPosition[0], currentPosition[1] - 1), (currentPosition[0] + 1, currentPosition[1]-2), (currentPosition[0] + 1, currentPosition[1]), (currentPosition[0] + 2, currentPosition[1] - 1)]
-        elif (currentPosition[0] - 2 == targetPosition[0]) and (currentPosition[1] + 2 == targetPosition[1]):
-            return [(currentPosition[0] - 1, currentPosition[1]), (currentPosition[0] - 2, currentPosition[1] + 1), (currentPosition[0], currentPosition[1] + 1), (currentPosition[0] - 1, currentPosition[1] + 2)]
-        elif (currentPosition[0] - 2 == targetPosition[0]) and (currentPosition[1] - 2 == targetPosition[1]):
-            return [(currentPosition[0] - 1, currentPosition[1]),(currentPosition[0] - 2, currentPosition[1] -1), (currentPosition[0], currentPosition[1] - 1), (currentPosition[0] - 1, currentPosition[1] - 2)]
+                return [
+                    (currentPosition[0], currentPosition[1] + 1),
+                    (currentPosition[0], currentPosition[1] + 3),
+                    (currentPosition[0], currentPosition[1] + 4),
+                ]
+        # da li se krecemo dijagonalno
+        if (currentPosition[0] + 2 == targetPosition[0]) and (
+            currentPosition[1] + 2 == targetPosition[1]
+        ):
+            return [
+                (currentPosition[0], currentPosition[1] + 1),
+                (currentPosition[0] + 1, currentPosition[1] + 2),
+                (currentPosition[0] + 1, currentPosition[1]),
+                (currentPosition[0] + 2, currentPosition[1] + 1),
+            ]
+        elif (currentPosition[0] + 2 == targetPosition[0]) and (
+            currentPosition[1] - 2 == targetPosition[1]
+        ):
+            return [
+                (currentPosition[0], currentPosition[1] - 1),
+                (currentPosition[0] + 1, currentPosition[1] - 2),
+                (currentPosition[0] + 1, currentPosition[1]),
+                (currentPosition[0] + 2, currentPosition[1] - 1),
+            ]
+        elif (currentPosition[0] - 2 == targetPosition[0]) and (
+            currentPosition[1] + 2 == targetPosition[1]
+        ):
+            return [
+                (currentPosition[0] - 1, currentPosition[1]),
+                (currentPosition[0] - 2, currentPosition[1] + 1),
+                (currentPosition[0], currentPosition[1] + 1),
+                (currentPosition[0] - 1, currentPosition[1] + 2),
+            ]
+        elif (currentPosition[0] - 2 == targetPosition[0]) and (
+            currentPosition[1] - 2 == targetPosition[1]
+        ):
+            return [
+                (currentPosition[0] - 1, currentPosition[1]),
+                (currentPosition[0] - 2, currentPosition[1] - 1),
+                (currentPosition[0], currentPosition[1] - 1),
+                (currentPosition[0] - 1, currentPosition[1] - 2),
+            ]
 
     def validMove(self, pawn, move, wall):
 
@@ -258,68 +299,179 @@ class Board:
 
         finish = None
         if pawn == "X" or pawn == "x":
-            finish=(self.start_o1, self.start_o2)
-        else: 
+            finish = (self.start_o1, self.start_o2)
+        else:
             finish = (self.start_x1, self.start_x2)
 
         if wall != None:
 
             if wall[0] == "G":
-                if self.matrix[wall[1]][wall[2] + 1] == "ǁ" or self.matrix[wall[1] + 2][wall[2] + 1] == "ǁ": 
-                     return False
-            else:
-                if self.matrix[wall[1] + 1][wall[2]] == "═" or self.matrix[wall[1] + 1][wall[2] + 2] == "═":
+                if (
+                    self.matrix[wall[1]][wall[2] + 1] == "ǁ"
+                    or self.matrix[wall[1] + 2][wall[2] + 1] == "ǁ"
+                ):
                     return False
-                
+            else:
+                if (
+                    self.matrix[wall[1] + 1][wall[2]] == "═"
+                    or self.matrix[wall[1] + 1][wall[2] + 2] == "═"
+                ):
+                    return False
 
-        #da li se na nasem putu nalazi zid
-        #da li se krecemo horizontalno
+        # da li se na nasem putu nalazi zid
+        # da li se krecemo horizontalno
 
-        #da li se na move vec nalazi neki igrac
+        # da li se na move vec nalazi neki igrac
         # da li se nalazi neka oznaka na tom mestu u matrici
-        if (self.matrix[move[0]][move[1]] == "x" or self.matrix[move[0]][move[1]] == "X" or self.matrix[move[0]][move[1]] == "o" or self.matrix[move[0]][move[1]] == "O") and (move != finish[0] or move != finish[1]):
+        if (
+            self.matrix[move[0]][move[1]] == "x"
+            or self.matrix[move[0]][move[1]] == "X"
+            or self.matrix[move[0]][move[1]] == "o"
+            or self.matrix[move[0]][move[1]] == "O"
+        ) and (move != finish[0] or move != finish[1]):
             return False
 
+        # pokusaj pomeranja za jedno polje
+        if abs(currentPosition[0] - move[0]) + abs(currentPosition[1] - move[1]) == 2:
 
-        #pokusaj pomeranja za jedno polje
-        if (
-            abs(currentPosition[0] - move[0])
-            + abs(currentPosition[1] - move[1])
-            == 2
-        ):
-       
-        # da li je sledece polje zapravo ciljno polje
+            # da li je sledece polje zapravo ciljno polje
             path = self.getPath(currentPosition, move)
-            if self.matrix[path[0][0]][path[0][1]]!= "═" and self.matrix[path[0][0]][path[0][1]]!= "ǁ":
+            if (
+                self.matrix[path[0][0]][path[0][1]] != "═"
+                and self.matrix[path[0][0]][path[0][1]] != "ǁ"
+            ):
                 return False
 
-            if(move == finish[0] or move == finish[1]):
+            if move == finish[0] or move == finish[1]:
                 return True
 
-            if self.matrix[path[1][0]][path[1][1]]!= "═" and self.matrix[path[1][0]][path[1][1]]!= "ǁ":
+            if (
+                self.matrix[path[1][0]][path[1][1]] != "═"
+                and self.matrix[path[1][0]][path[1][1]] != "ǁ"
+            ):
                 return False
 
-            if path[2] == self.current_o1 or path[2] == self.current_o2 or path[2] == self.current_x1 or path[2] == self.current_x2:
+            if (
+                path[2] == self.current_o1
+                or path[2] == self.current_o2
+                or path[2] == self.current_x1
+                or path[2] == self.current_x2
+            ):
                 return False
-            return True 
-
-        #da li se na dva polja nalazi protivnicki igrac
-        #da li je ispred protivnickog igraca zid
- 
-        #da li se pomeramo za dva mesta
-        if (
-            abs(currentPosition[0] - move[0])
-            + abs(currentPosition[1] - move[1])
-            != 4
-        ):
-            return False
-            
-        path = self.getPath(currentPosition,move)
-            
-        if self.matrix[path[0][0]][path[0][1]]!= "═" and self.matrix[path[0][0]][path[0][1]]!= "ǁ" and self.matrix[path[1][0]][path[1][1]]!= "═" and self.matrix[path[1][0]][path[1][1]]!= "ǁ":
             return True
-        
-        if len(path)==4:
-            if self.matrix[path[2][0]][path[2][1]]!= "═" and self.matrix[path[2][0]][path[2][1]]!= "ǁ" and self.matrix[path[3][0]][path[3][1]]!= "═" and self.matrix[path[3][0]][path[3][1]]!= "ǁ":
+
+        # da li se na dva polja nalazi protivnicki igrac
+        # da li je ispred protivnickog igraca zid
+
+        # da li se pomeramo za dva mesta
+        if abs(currentPosition[0] - move[0]) + abs(currentPosition[1] - move[1]) != 4:
+            return False
+
+        path = self.getPath(currentPosition, move)
+
+        if (
+            self.matrix[path[0][0]][path[0][1]] != "═"
+            and self.matrix[path[0][0]][path[0][1]] != "ǁ"
+            and self.matrix[path[1][0]][path[1][1]] != "═"
+            and self.matrix[path[1][0]][path[1][1]] != "ǁ"
+        ):
+            return True
+
+        if len(path) == 4:
+            if (
+                self.matrix[path[2][0]][path[2][1]] != "═"
+                and self.matrix[path[2][0]][path[2][1]] != "ǁ"
+                and self.matrix[path[3][0]][path[3][1]] != "═"
+                and self.matrix[path[3][0]][path[3][1]] != "ǁ"
+            ):
                 return True
         return False
+
+    def blockedPath(self):
+        self.tmpMatrix = copy.deepcopy(self.matrix)
+        self.floodFill(self.start_x1)
+
+    def floodFill(self, start: tuple(int, int)):
+        # pawnX = 0
+        # pawnO = 0
+        # targetX = 0
+        # targetO = 0
+
+        result = [0, 0, 0, 0]
+        # obradi start
+        # inkrementira odgovarajuce brojace
+        if start == self.current_x1 or start == self.current_x2:
+            result[0] = result[0] + 1
+        if start == self.current_o1 or start == self.current_o2:
+            result[1] = result[1] + 1
+        if start == self.start_o1 or start == self.start_o2:
+            result[2] = result[2] + 1
+        if start == self.start_x1 or start == self.start_x2:
+            result[3] = result[3] + 1
+        self.tmpMatrix[start[0]][start[1]] = "!"
+
+        # rekurzivno pozivanje za okolna polja
+        # levo
+        if (
+            start[1] - 2 >= 0
+            and self.tmpMatrix[start[0]][start[1] - 2] != "!"
+            and self.tmpMatrix[start[0]][start[1] - 1] != verticalWall
+        ):
+            result = list(
+                map(
+                    lambda x, y: x + y, result, self.floodFill((start[0], start[1] - 2))
+                )
+            )
+
+        # desno
+        if (
+            start[1] + 2 < self.column
+            and self.tmpMatrix[start[0]][start[1] + 2] != "!"
+            and self.tmpMatrix[start[0]][start[1] + 1] != verticalWall
+        ):
+            result = list(
+                map(
+                    lambda x, y: x + y, result, self.floodFill((start[0], start[1] + 2))
+                )
+            )
+
+        # gore
+        if (
+            start[0] - 2 >= 0
+            and self.tmpMatrix[start[0] - 2][start[1]] != "!"
+            and self.tmpMatrix[start[0] - 1][start[1]] != horisontalWall
+        ):
+            result = list(
+                map(
+                    lambda x, y: x + y, result, self.floodFill((start[0] - 2, start[1]))
+                )
+            )
+
+        # dole
+        if (
+            start[0] + 2 < self.row
+            and self.tmpMatrix[start[0] + 2][start[1]] != "!"
+            and self.tmpMatrix[start[0] + 1][start[1]] != horisontalWall
+        ):
+            result = list(
+                map(
+                    lambda x, y: x + y, result, self.floodFill((start[0] + 2, start[1]))
+                )
+            )
+
+        # gore levo
+        if (
+            start[0] - 2 >= 0
+            and start[1] -2 >= 0
+            and self.tmpMatrix[start[0] - 2][start[1] - 2] != "!"
+            and self.tmpMatrix[start[0] + 1][start[1]] != horisontalWall
+        ):
+            result = list(
+                map(
+                    lambda x, y: x + y, result, self.floodFill((start[0] + 2, start[1]))
+                )
+            )
+
+
+
+        return result
