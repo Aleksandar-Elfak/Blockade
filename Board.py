@@ -248,24 +248,27 @@ class Board:
                     (currentPosition[0], currentPosition[1] + 4),
                 ]
         # da li se krecemo dijagonalno
+        # dole doseno
         if (currentPosition[0] + 2 == targetPosition[0]) and (
             currentPosition[1] + 2 == targetPosition[1]
         ):
             return [
-                (currentPosition[0], currentPosition[1] + 1),
-                (currentPosition[0] + 1, currentPosition[1] + 2),
                 (currentPosition[0] + 1, currentPosition[1]),
                 (currentPosition[0] + 2, currentPosition[1] + 1),
+                (currentPosition[0], currentPosition[1] + 1),
+                (currentPosition[0] + 1, currentPosition[1] + 2),
             ]
+        # dole levo
         elif (currentPosition[0] + 2 == targetPosition[0]) and (
             currentPosition[1] - 2 == targetPosition[1]
         ):
             return [
-                (currentPosition[0], currentPosition[1] - 1),
-                (currentPosition[0] + 1, currentPosition[1] - 2),
                 (currentPosition[0] + 1, currentPosition[1]),
                 (currentPosition[0] + 2, currentPosition[1] - 1),
+                (currentPosition[0], currentPosition[1] - 1),
+                (currentPosition[0] + 1, currentPosition[1] - 2),
             ]
+        # gore desno
         elif (currentPosition[0] - 2 == targetPosition[0]) and (
             currentPosition[1] + 2 == targetPosition[1]
         ):
@@ -275,6 +278,7 @@ class Board:
                 (currentPosition[0], currentPosition[1] + 1),
                 (currentPosition[0] - 1, currentPosition[1] + 2),
             ]
+        # gore levo
         elif (currentPosition[0] - 2 == targetPosition[0]) and (
             currentPosition[1] - 2 == targetPosition[1]
         ):
@@ -379,6 +383,7 @@ class Board:
 
         if len(path) == 4:
             if (
+                # todo smani provere na samo neophodne
                 self.matrix[path[2][0]][path[2][1]] != "═"
                 and self.matrix[path[2][0]][path[2][1]] != "ǁ"
                 and self.matrix[path[3][0]][path[3][1]] != "═"
@@ -388,8 +393,23 @@ class Board:
         return False
 
     def blockedPath(self):
+        # pawnX = 0
+        # pawnO = 0
+        # targetX = 0
+        # targetO = 0
+
         self.tmpMatrix = copy.deepcopy(self.matrix)
-        self.floodFill(self.start_x1)
+        result = self.floodFill(self.start_x1)
+        if result[3] == 2 and result[1] == 2:
+            if result[0] == 2 and result[2] == 2:
+                return True
+            elif result[0] > 0 or result[2] > 0:
+                return False
+            else:
+                result = self.floodFill(self.start_o1)
+                if result[0] == 2 and result[2] == 2:
+                    return True
+        return False
 
     def floodFill(self, start: tuple(int, int)):
         # pawnX = 0
@@ -462,16 +482,95 @@ class Board:
         # gore levo
         if (
             start[0] - 2 >= 0
-            and start[1] -2 >= 0
+            and start[1] - 2 >= 0
             and self.tmpMatrix[start[0] - 2][start[1] - 2] != "!"
-            and self.tmpMatrix[start[0] + 1][start[1]] != horisontalWall
         ):
-            result = list(
-                map(
-                    lambda x, y: x + y, result, self.floodFill((start[0] + 2, start[1]))
+            path = self.getPath(start, (start[0] - 2, start[0] - 2))
+
+            if (
+                self.tmpMatrix[path[0][0]][path[0][1]] != horisontalWall
+                and self.tmpMatrix[path[1][0]][path[1][1]] != verticalWall
+            ) or (
+                self.tmpMatrix[path[2][0]][path[2][1]] != horisontalWall
+                and self.tmpMatrix[path[3][0]][path[3][1]] != verticalWall
+            ):
+
+                result = list(
+                    map(
+                        lambda x, y: x + y,
+                        result,
+                        self.floodFill((start[0] - 2, start[1] - 2)),
+                    )
                 )
-            )
+        # gore desno
+        if (
+            start[0] - 2 >= 0
+            and start[1] + 2 < self.column
+            and self.tmpMatrix[start[0] - 2][start[1] + 2] != "!"
+        ):
+            path = self.getPath(start, (start[0] - 2, start[0] + 2))
 
+            if (
+                self.tmpMatrix[path[0][0]][path[0][1]] != horisontalWall
+                and self.tmpMatrix[path[1][0]][path[1][1]] != verticalWall
+            ) or (
+                self.tmpMatrix[path[2][0]][path[2][1]] != horisontalWall
+                and self.tmpMatrix[path[3][0]][path[3][1]] != verticalWall
+            ):
 
+                result = list(
+                    map(
+                        lambda x, y: x + y,
+                        result,
+                        self.floodFill((start[0] - 2, start[1] + 2)),
+                    )
+                )
+
+        # dole levo
+        if (
+            start[0] + 2 < self.row
+            and start[1] - 2 >= 0
+            and self.tmpMatrix[start[0] + 2][start[1] - 2] != "!"
+        ):
+            path = self.getPath(start, (start[0] + 2, start[0] - 2))
+
+            if (
+                self.tmpMatrix[path[0][0]][path[0][1]] != horisontalWall
+                and self.tmpMatrix[path[1][0]][path[1][1]] != verticalWall
+            ) or (
+                self.tmpMatrix[path[2][0]][path[2][1]] != horisontalWall
+                and self.tmpMatrix[path[3][0]][path[3][1]] != verticalWall
+            ):
+
+                result = list(
+                    map(
+                        lambda x, y: x + y,
+                        result,
+                        self.floodFill((start[0] + 2, start[1] - 2)),
+                    )
+                )
+        # dole desno
+        if (
+            start[0] + 2 < self.row
+            and start[1] + 2 < self.column
+            and self.tmpMatrix[start[0] + 2][start[1] + 2] != "!"
+        ):
+            path = self.getPath(start, (start[0] + 2, start[0] + 2))
+
+            if (
+                self.tmpMatrix[path[0][0]][path[0][1]] != horisontalWall
+                and self.tmpMatrix[path[1][0]][path[1][1]] != verticalWall
+            ) or (
+                self.tmpMatrix[path[2][0]][path[2][1]] != horisontalWall
+                and self.tmpMatrix[path[3][0]][path[3][1]] != verticalWall
+            ):
+
+                result = list(
+                    map(
+                        lambda x, y: x + y,
+                        result,
+                        self.floodFill((start[0] + 2, start[1] + 2)),
+                    )
+                )
 
         return result
