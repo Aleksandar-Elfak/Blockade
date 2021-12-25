@@ -1,3 +1,21 @@
-if 1 - 2 >= 0:
-    print("ff")
-print("faa")
+matrix = 2
+
+
+def getState():
+    return {
+        "m": matrix,
+    }
+
+
+def pr():
+    print(matrix)
+
+
+def c():
+
+    getState()["m"] = 0
+
+
+pr()
+c()
+pr()

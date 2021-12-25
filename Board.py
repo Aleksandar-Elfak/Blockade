@@ -310,7 +310,7 @@ class Board:
                 (currentPosition[0], currentPosition[1] - 1),
             ]
 
-    def validMove(self, pawn, move, wall):
+    def validMove(self, pawn, move, wall, state):
 
         currentPosition = (
             self.current_x1
@@ -352,7 +352,7 @@ class Board:
                 self.tmpMatrix[wall[1] + 1][wall[2]] = horisontalWall
                 self.tmpMatrix[wall[1] + 1][wall[2] + 2] = horisontalWall
 
-            if self.blockedPath() == False:
+            if self.blockedPath(state) == False:
                 print("Invalid move[c]: Path to the finish is blocked.")
                 return False
 
@@ -431,14 +431,14 @@ class Board:
         print("Invalid move[i]: Pawn's jump is blocked by a wall.")
         return False
 
-    def blockedPath(self):
+    def blockedPath(self, state):
         # pawnX == result[0]
         # pawnO == result[1]
         # targetX == result[2]
         # targetO == result[3]
 
         # oblast u koju se nalazi cilj za 0
-        result = self.floodFill(self.start_x1)
+        result = self.floodFill(self.start_x1, state)
 
         # da li su u oblast u koju se nalazi cilj za 0 svi pesaci i ciljevi oxa
         if result[3] == 2 and result[1] == 2:
@@ -451,13 +451,13 @@ class Board:
             # u oblast u koju se nalazi cilj za 0 ne postoji ni jedan element ixa
             else:
                 # oblast u koju se nalazi cilj za x
-                result = self.floodFill(self.start_o1)
+                result = self.floodFill(self.start_o1, state)
                 # da li su svi elementi ixa u oblasti gde se nalazi cilj za x
                 if result[0] == 2 and result[2] == 2:
                     return True
         return False
 
-    def floodFill(self, start):
+    def floodFill(self, start, state):
         # pawnX = 0
         # pawnO = 0
         # targetX = 0
@@ -466,22 +466,22 @@ class Board:
         result = [0, 0, 0, 0]
         # obradi start
         # inkrementira odgovarajuce brojace
-        if start == self.current_x1 or start == self.current_x2:
+        if start == state["X"] or start == state["x"]:
             result[0] = result[0] + 1
-        if start == self.current_o1 or start == self.current_o2:
+        if start == state["O"] or start == state["o"]:
             result[1] = result[1] + 1
         if start == self.start_o1 or start == self.start_o2:
             result[2] = result[2] + 1
         if start == self.start_x1 or start == self.start_x2:
             result[3] = result[3] + 1
-        self.tmpMatrix[start[0]][start[1]] = "!"
+        state["matrix"][start[0]][start[1]] = "!"
 
         # rekurzivno pozivanje za okolna polja
         # levo
         if (
             start[1] - 2 >= 0
-            and self.tmpMatrix[start[0]][start[1] - 2] != "!"
-            and self.tmpMatrix[start[0]][start[1] - 1] != verticalWall
+            and state["matrix"][start[0]][start[1] - 2] != "!"
+            and state["matrix"][start[0]][start[1] - 1] != verticalWall
         ):
             result = list(
                 map(
@@ -492,8 +492,8 @@ class Board:
         # desno
         if (
             start[1] + 2 < self.column
-            and self.tmpMatrix[start[0]][start[1] + 2] != "!"
-            and self.tmpMatrix[start[0]][start[1] + 1] != verticalWall
+            and state["matrix"][start[0]][start[1] + 2] != "!"
+            and state["matrix"][start[0]][start[1] + 1] != verticalWall
         ):
             result = list(
                 map(
@@ -504,8 +504,8 @@ class Board:
         # gore
         if (
             start[0] - 2 >= 0
-            and self.tmpMatrix[start[0] - 2][start[1]] != "!"
-            and self.tmpMatrix[start[0] - 1][start[1]] != horisontalWall
+            and state["matrix"][start[0] - 2][start[1]] != "!"
+            and state["matrix"][start[0] - 1][start[1]] != horisontalWall
         ):
             result = list(
                 map(
@@ -516,8 +516,8 @@ class Board:
         # dole
         if (
             start[0] + 2 < self.row
-            and self.tmpMatrix[start[0] + 2][start[1]] != "!"
-            and self.tmpMatrix[start[0] + 1][start[1]] != horisontalWall
+            and state["matrix"][start[0] + 2][start[1]] != "!"
+            and state["matrix"][start[0] + 1][start[1]] != horisontalWall
         ):
             result = list(
                 map(
@@ -529,16 +529,16 @@ class Board:
         if (
             start[0] - 2 >= 0
             and start[1] - 2 >= 0
-            and self.tmpMatrix[start[0] - 2][start[1] - 2] != "!"
+            and state["matrix"][start[0] - 2][start[1] - 2] != "!"
         ):
             path = self.getPath(start, (start[0] - 2, start[1] - 2))
 
             if (
-                self.tmpMatrix[path[0][0]][path[0][1]] != horisontalWall
-                and self.tmpMatrix[path[1][0]][path[1][1]] != verticalWall
+                state["matrix"][path[0][0]][path[0][1]] != horisontalWall
+                and state["matrix"][path[1][0]][path[1][1]] != verticalWall
             ) or (
-                self.tmpMatrix[path[2][0]][path[2][1]] != horisontalWall
-                and self.tmpMatrix[path[3][0]][path[3][1]] != verticalWall
+                state["matrix"][path[2][0]][path[2][1]] != horisontalWall
+                and state["matrix"][path[3][0]][path[3][1]] != verticalWall
             ):
 
                 result = list(
@@ -552,16 +552,16 @@ class Board:
         if (
             start[0] - 2 >= 0
             and start[1] + 2 < self.column
-            and self.tmpMatrix[start[0] - 2][start[1] + 2] != "!"
+            and state["matrix"][start[0] - 2][start[1] + 2] != "!"
         ):
             path = self.getPath(start, (start[0] - 2, start[1] + 2))
 
             if (
-                self.tmpMatrix[path[0][0]][path[0][1]] != horisontalWall
-                and self.tmpMatrix[path[1][0]][path[1][1]] != verticalWall
+                state["matrix"][path[0][0]][path[0][1]] != horisontalWall
+                and state["matrix"][path[1][0]][path[1][1]] != verticalWall
             ) or (
-                self.tmpMatrix[path[2][0]][path[2][1]] != horisontalWall
-                and self.tmpMatrix[path[3][0]][path[3][1]] != verticalWall
+                state["matrix"][path[2][0]][path[2][1]] != horisontalWall
+                and state["matrix"][path[3][0]][path[3][1]] != verticalWall
             ):
 
                 result = list(
@@ -576,16 +576,16 @@ class Board:
         if (
             start[0] + 2 < self.row
             and start[1] - 2 >= 0
-            and self.tmpMatrix[start[0] + 2][start[1] - 2] != "!"
+            and state["matrix"][start[0] + 2][start[1] - 2] != "!"
         ):
             path = self.getPath(start, (start[0] + 2, start[1] - 2))
 
             if (
-                self.tmpMatrix[path[0][0]][path[0][1]] != horisontalWall
-                and self.tmpMatrix[path[1][0]][path[1][1]] != verticalWall
+                state["matrix"][path[0][0]][path[0][1]] != horisontalWall
+                and state["matrix"][path[1][0]][path[1][1]] != verticalWall
             ) or (
-                self.tmpMatrix[path[2][0]][path[2][1]] != horisontalWall
-                and self.tmpMatrix[path[3][0]][path[3][1]] != verticalWall
+                state["matrix"][path[2][0]][path[2][1]] != horisontalWall
+                and state["matrix"][path[3][0]][path[3][1]] != verticalWall
             ):
 
                 result = list(
@@ -599,16 +599,16 @@ class Board:
         if (
             start[0] + 2 < self.row
             and start[1] + 2 < self.column
-            and self.tmpMatrix[start[0] + 2][start[1] + 2] != "!"
+            and state["matrix"][start[0] + 2][start[1] + 2] != "!"
         ):
             path = self.getPath(start, (start[0] + 2, start[1] + 2))
 
             if (
-                self.tmpMatrix[path[0][0]][path[0][1]] != horisontalWall
-                and self.tmpMatrix[path[1][0]][path[1][1]] != verticalWall
+                state["matrix"][path[0][0]][path[0][1]] != horisontalWall
+                and state["matrix"][path[1][0]][path[1][1]] != verticalWall
             ) or (
-                self.tmpMatrix[path[2][0]][path[2][1]] != horisontalWall
-                and self.tmpMatrix[path[3][0]][path[3][1]] != verticalWall
+                state["matrix"][path[2][0]][path[2][1]] != horisontalWall
+                and state["matrix"][path[3][0]][path[3][1]] != verticalWall
             ):
 
                 result = list(
