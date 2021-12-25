@@ -24,8 +24,8 @@ class Game:
         self.player_o = Player(num_wall, True, "O")
         self.currentPlayer = self.player_x
 
-    def showBoard(self):
-        self.board.showBoard()
+    def showBoard(self, state):
+        self.board.showBoard(state)
 
     def possibleMoves(self, state):
         pawn1 = None
@@ -74,32 +74,42 @@ class Game:
         ]
 
         walls = []
-        for row in range(0, len(state["matrix"]) - 1, 2):
-            for column in range(0, len(state["matrix"][row]) - 1, 2):
-                walls.append(("B", row, column))
-                walls.append(("G", row, column))
+        if BlueLeftover > 0 or GreenLeftover > 0:
+            for row in range(0, len(state["matrix"]) - 2, 2):
+                for column in range(0, len(state["matrix"][row]) - 2, 2):
+                    if BlueLeftover > 0:
+                        walls.append(("B", row, column))
+                    if GreenLeftover > 0:
+                        walls.append(("G", row, column))
 
         for jump in jumps1:
-            for wall in walls:
-                if self.validMoveAI(state, pawn1, jump, wall):
-                    yield (pawn1, jump, wall)
+            if BlueLeftover > 0 or GreenLeftover > 0:
+                for wall in walls:
+                    if self.validMove(pawn1, jump, wall, state):
+                        yield (pawn1, jump, wall)
+            else:
+                if self.validMove(pawn1, jump, None, state):
+                    yield (pawn1, jump, None)
 
         for jump in jumps2:
-            for wall in walls:
-                if self.validMoveAI(state, pawn2, jump, wall):
-                    yield (pawn2, jump, wall)
+            if BlueLeftover > 0 or GreenLeftover > 0:
+                for wall in walls:
+                    if self.validMove(pawn2, jump, wall, state):
+                        yield (pawn2, jump, wall)
+            else:
+                if self.validMove(pawn1, jump, None, state):
+                    yield (pawn2, jump, None)
 
-    def playAIMove(self, state, move):
-        # reduce wall
-        return
+    def playAIMove(self, pawn, jump, wall, state):
+        self.board.playAIMove(pawn, jump, wall, state)
 
     def getState(self):
         return {
             "matrix": copy.deepcopy(self.board.matrix),
             "X": self.board.current_x1,
             "x": self.board.current_x2,
-            "o": self.board.current_o1,
-            "O": self.board.current_o2,
+            "O": self.board.current_o1,
+            "o": self.board.current_o2,
             "xGreenWall": self.player_x.green_leftover,
             "xBlueWall": self.player_x.blue_leftover,
             "oGreenWall": self.player_o.green_leftover,
@@ -111,14 +121,12 @@ class Game:
         state = self.getState()
 
         for move in self.possibleMoves(state):
-            yield self.playAIMove(state, move)
+            posState = copy.deepcopy(state)
+            self.playAIMove(move[0], move[1], move[2], posState)
+            yield posState
 
     def isEndAI(self):
         return  # todo later
-
-    def validMoveAI(self, pawn, jump, wall):
-
-        return
 
     def isEnd(self):
         return self.board.isEnd()
@@ -158,8 +166,10 @@ class Game:
         else:
             return parms
 
-    def validMove(self, pawn, move, wall):
-        return self.board.validMove(pawn, move, wall, self.getState())
+    def validMove(self, pawn, move, wall, state, pc=False):
+        if pc:
+            return self.board.validMove(pawn, move, wall, state, True)
+        return self.board.validMove(pawn, move, wall, state)
 
     def aiMove(self):
         print("AI MOVE")
@@ -193,7 +203,7 @@ class Game:
         move = params[0]
         wall = params[1]
 
-        if not self.validMove(pawn, move, wall):
+        if not self.validMove(pawn, move, wall, self.getState(), True):
             return False
 
         self.board.changeState(pawn, move, wall)
@@ -201,7 +211,7 @@ class Game:
         if wallNum:
             self.reduceWall(wall)
 
-        self.showBoard()
+        self.showBoard(self.getState())
 
         return True
 
@@ -212,9 +222,11 @@ class Game:
             return self.aiMove()
 
     def play(self):
-        self.showBoard()
+        self.showBoard(self.getState())
         while self.isEnd() == False:
-            self.possibleStates()  # predak min-maxa
+            for s in self.possibleStates():  # predak min-maxa
+                # self.showBoard(s)
+                None
 
             print(
                 "Round: "

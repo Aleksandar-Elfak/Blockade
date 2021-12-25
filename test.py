@@ -1,21 +1,8 @@
 matrix = 2
 
 
-def getState():
-    return {
-        "m": matrix,
-    }
+def getState(mat = "DADAD"):
+    print(mat)
 
-
-def pr():
-    print(matrix)
-
-
-def c():
-
-    getState()["m"] = 0
-
-
-pr()
-c()
-pr()
+getState()
+getState("aFFA")

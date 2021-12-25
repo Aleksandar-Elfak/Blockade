@@ -102,7 +102,7 @@ class Board:
             return True
         return False
 
-    def showBoard(self):
+    def showBoard(self, state):
         marking = [
             1,
             2,
@@ -152,13 +152,13 @@ class Board:
                 for y in range(0, self.column):
                     if y == 0:
                         print(marking[x // 2], end="ǁ")
-                    print(self.matrix[x][y], end="")
+                    print(state["matrix"][x][y], end="")
                 print("ǁ" + str(marking[x // 2]))
             else:
                 for y in range(0, self.column):
                     if y == 0:
                         print("  ", end="")
-                    print(self.matrix[x][y], end="")
+                    print(state["matrix"][x][y], end="")
                 print("")
 
         for i in range(0, self.column // 2 + 1):
@@ -172,6 +172,47 @@ class Board:
                 print("  ", end="")
             print(marking[i], end=" ")
         print("")
+
+    def playAIMove(self, pawn, jump, wall, state):
+        currentPosition = None
+        if pawn == "X":
+            currentPosition = state["X"]
+            state["X"] = jump
+        elif pawn == "x":
+            currentPosition = state["x"]
+            state["x"] = jump
+        elif pawn == "O":
+            currentPosition = state["O"]
+            state["O"] = jump
+        elif pawn == "o":
+            currentPosition = state["o"]
+            state["o"] = jump
+
+        state["matrix"][jump[0]][jump[1]] = pawn
+
+        if currentPosition == self.start_x1 or currentPosition == self.start_x2:
+            state["matrix"][currentPosition[0]][currentPosition[1]] = "⋆"
+        else:
+            if currentPosition == self.start_o1 or currentPosition == self.start_o2:
+                state["matrix"][currentPosition[0]][currentPosition[1]] = "0"
+            else:
+                state["matrix"][currentPosition[0]][currentPosition[1]] = " "
+
+        if wall != None:
+            if wall[0] == "G":
+                state["matrix"][wall[1]][wall[2] + 1] = verticalWall
+                state["matrix"][wall[1] + 2][wall[2] + 1] = verticalWall
+                if pawn == "x" or pawn == "X":
+                    state["xGreenWall"] -= 1
+                else:
+                    state["oGreenWall"] -= 1
+            else:
+                state["matrix"][wall[1] + 1][wall[2]] = horisontalWall
+                state["matrix"][wall[1] + 1][wall[2] + 2] = horisontalWall
+                if pawn == "x" or pawn == "X":
+                    state["xBlueWall"] -= 1
+                else:
+                    state["oBlueWall"] -= 1
 
     def changeState(self, pawn, move, wall):
         currentPosition = None
@@ -310,16 +351,17 @@ class Board:
                 (currentPosition[0], currentPosition[1] - 1),
             ]
 
-    def validMove(self, pawn, move, wall, state):
+    def validMove(self, pawn, move, wall, state, pc=False):
 
+        valid = None
         currentPosition = (
-            self.current_x1
+            state["X"]
             if pawn == "X"
-            else self.current_x2
+            else state["x"]
             if pawn == "x"
-            else self.current_o1
+            else state["O"]
             if pawn == "O"
-            else self.current_o2
+            else state["o"]
         )
 
         # uzimaju se ciljna stanja trenutnog igraca radi lakse provere
@@ -331,30 +373,23 @@ class Board:
 
         # provera da li je slobodno mesto za zid
         if wall != None:
-            self.tmpMatrix = copy.deepcopy(self.matrix)
-
+            statePath = copy.deepcopy(state)
             if wall[0] == "G":
                 if (
-                    self.matrix[wall[1]][wall[2] + 1] == "ǁ"
-                    or self.matrix[wall[1] + 2][wall[2] + 1] == "ǁ"
+                    state["matrix"][wall[1]][wall[2] + 1] == "ǁ"
+                    or state["matrix"][wall[1] + 2][wall[2] + 1] == "ǁ"
                 ):
-                    print("Invalid move[a]: There is already a wall on that spot.")
+                    if pc:
+                        print("Invalid move[a]: There is already a wall on that spot.")
                     return False
-                self.tmpMatrix[wall[1]][wall[2] + 1] = verticalWall
-                self.tmpMatrix[wall[1] + 2][wall[2] + 1] = verticalWall
             else:
                 if (
-                    self.matrix[wall[1] + 1][wall[2]] == "═"
-                    or self.matrix[wall[1] + 1][wall[2] + 2] == "═"
+                    state["matrix"][wall[1] + 1][wall[2]] == "═"
+                    or state["matrix"][wall[1] + 1][wall[2] + 2] == "═"
                 ):
-                    print("Invalid move[b]: There is already a wall on that spot.")
+                    if pc:
+                        print("Invalid move[b]: There is already a wall on that spot.")
                     return False
-                self.tmpMatrix[wall[1] + 1][wall[2]] = horisontalWall
-                self.tmpMatrix[wall[1] + 1][wall[2] + 2] = horisontalWall
-
-            if self.blockedPath(state) == False:
-                print("Invalid move[c]: Path to the finish is blocked.")
-                return False
 
         # da li se na nasem putu nalazi zid
         # da li se krecemo horizontalno
@@ -362,12 +397,13 @@ class Board:
         # da li se na move vec nalazi neki igrac
         # da li se nalazi neka oznaka na tom mestu u matrici
         if (
-            self.matrix[move[0]][move[1]] == "x"
-            or self.matrix[move[0]][move[1]] == "X"
-            or self.matrix[move[0]][move[1]] == "o"
-            or self.matrix[move[0]][move[1]] == "O"
+            state["matrix"][move[0]][move[1]] == "x"
+            or state["matrix"][move[0]][move[1]] == "X"
+            or state["matrix"][move[0]][move[1]] == "o"
+            or state["matrix"][move[0]][move[1]] == "O"
         ) and (move != finish[0] and move != finish[1]):
-            print("Invalid move[d]: Pawn can not be moved on a taken space.")
+            if pc:
+                print("Invalid move[d]: Pawn can not be moved on a taken space.")
             return False
 
         # pokusaj pomeranja za jedno polje
@@ -375,60 +411,85 @@ class Board:
 
             path = self.getPath(currentPosition, move)
             if (
-                self.matrix[path[0][0]][path[0][1]] == "═"
-                or self.matrix[path[0][0]][path[0][1]] == "ǁ"
+                state["matrix"][path[0][0]][path[0][1]] == "═"
+                or state["matrix"][path[0][0]][path[0][1]] == "ǁ"
             ):
-                print("Invalid move[e]: Pawn is blocked by a wall.")
+                if pc:
+                    print("Invalid move[e]: Pawn is blocked by a wall.")
                 return False
 
             # da li je sledece polje zapravo ciljno polje
             if move == finish[0] or move == finish[1]:
+                self.playAIMove(pawn, move, wall, statePath)
+                if self.blockedPath(statePath) == False:
+                    if pc:
+                        print("Invalid move[c]: Path to the finish is blocked.")
+                    return False
                 return True
 
             if (
-                self.matrix[path[1][0]][path[1][1]] == "═"
-                or self.matrix[path[1][0]][path[1][1]] == "ǁ"
+                state["matrix"][path[1][0]][path[1][1]] == "═"
+                or state["matrix"][path[1][0]][path[1][1]] == "ǁ"
             ):
-                print("Invalid move[f]: Pawn can not be moved only one space.")
+                if pc:
+                    print("Invalid move[f]: Pawn can not be moved only one space.")
                 return False
 
             # da li se na dva polja nalazi protivnicki igrac
             if (
-                path[2] == self.current_o1
-                or path[2] == self.current_o2
-                or path[2] == self.current_x1
-                or path[2] == self.current_x2
+                path[2] == state["X"]
+                or path[2] == state["x"]
+                or path[2] == state["O"]
+                or path[2] == state["o"]
             ):
+                self.playAIMove(pawn, move, wall, statePath)
+                if self.blockedPath(statePath) == False:
+                    if pc:
+                        print("Invalid move[c]: Path to the finish is blocked.")
+                    return False
                 return True
-            print("Invalid move[g]: Pawn can not be moved only one space.")
+            if pc:
+                print("Invalid move[g]: Pawn can not be moved only one space.")
             return False
 
         # da li se pomeramo za dva mesta
         if abs(currentPosition[0] - move[0]) + abs(currentPosition[1] - move[1]) != 4:
-            print("Invalid move[h]: Pawn must be moved two spaces.")
+            if pc:
+                print("Invalid move[h]: Pawn must be moved two spaces.")
             return False
 
         path = self.getPath(currentPosition, move)
 
         if (
-            self.matrix[path[0][0]][path[0][1]] != "═"
-            and self.matrix[path[0][0]][path[0][1]] != "ǁ"
-            and self.matrix[path[1][0]][path[1][1]] != "═"
-            and self.matrix[path[1][0]][path[1][1]] != "ǁ"
+            state["matrix"][path[0][0]][path[0][1]] != "═"
+            and state["matrix"][path[0][0]][path[0][1]] != "ǁ"
+            and state["matrix"][path[1][0]][path[1][1]] != "═"
+            and state["matrix"][path[1][0]][path[1][1]] != "ǁ"
         ):
+            self.playAIMove(pawn, move, wall, statePath)
+            if self.blockedPath(statePath) == False:
+                if pc:
+                    print("Invalid move[c]: Path to the finish is blocked.")
+                return False
             return True
 
         if len(path) == 4:
             if (
                 # todo smani provere na samo neophodne
-                self.matrix[path[2][0]][path[2][1]] != "═"
-                and self.matrix[path[2][0]][path[2][1]] != "ǁ"
-                and self.matrix[path[3][0]][path[3][1]] != "═"
-                and self.matrix[path[3][0]][path[3][1]] != "ǁ"
+                state["matrix"][path[2][0]][path[2][1]] != "═"
+                and state["matrix"][path[2][0]][path[2][1]] != "ǁ"
+                and state["matrix"][path[3][0]][path[3][1]] != "═"
+                and state["matrix"][path[3][0]][path[3][1]] != "ǁ"
             ):
+                self.playAIMove(pawn, move, wall, statePath)
+                if self.blockedPath(statePath) == False:
+                    if pc:
+                        print("Invalid move[c]: Path to the finish is blocked.")
+                    return False
                 return True
-
-        print("Invalid move[i]: Pawn's jump is blocked by a wall.")
+                
+        if pc:
+            print("Invalid move[i]: Pawn's jump is blocked by a wall.")
         return False
 
     def blockedPath(self, state):
@@ -476,6 +537,7 @@ class Board:
             result[3] = result[3] + 1
         state["matrix"][start[0]][start[1]] = "!"
 
+        # self.showBoard(state)
         # rekurzivno pozivanje za okolna polja
         # levo
         if (
@@ -485,7 +547,9 @@ class Board:
         ):
             result = list(
                 map(
-                    lambda x, y: x + y, result, self.floodFill((start[0], start[1] - 2))
+                    lambda x, y: x + y,
+                    result,
+                    self.floodFill((start[0], start[1] - 2), state),
                 )
             )
 
@@ -497,7 +561,9 @@ class Board:
         ):
             result = list(
                 map(
-                    lambda x, y: x + y, result, self.floodFill((start[0], start[1] + 2))
+                    lambda x, y: x + y,
+                    result,
+                    self.floodFill((start[0], start[1] + 2), state),
                 )
             )
 
@@ -509,7 +575,9 @@ class Board:
         ):
             result = list(
                 map(
-                    lambda x, y: x + y, result, self.floodFill((start[0] - 2, start[1]))
+                    lambda x, y: x + y,
+                    result,
+                    self.floodFill((start[0] - 2, start[1]), state),
                 )
             )
 
@@ -521,7 +589,9 @@ class Board:
         ):
             result = list(
                 map(
-                    lambda x, y: x + y, result, self.floodFill((start[0] + 2, start[1]))
+                    lambda x, y: x + y,
+                    result,
+                    self.floodFill((start[0] + 2, start[1]), state),
                 )
             )
 
@@ -545,7 +615,7 @@ class Board:
                     map(
                         lambda x, y: x + y,
                         result,
-                        self.floodFill((start[0] - 2, start[1] - 2)),
+                        self.floodFill((start[0] - 2, start[1] - 2), state),
                     )
                 )
         # gore desno
@@ -568,7 +638,7 @@ class Board:
                     map(
                         lambda x, y: x + y,
                         result,
-                        self.floodFill((start[0] - 2, start[1] + 2)),
+                        self.floodFill((start[0] - 2, start[1] + 2), state),
                     )
                 )
 
@@ -592,7 +662,7 @@ class Board:
                     map(
                         lambda x, y: x + y,
                         result,
-                        self.floodFill((start[0] + 2, start[1] - 2)),
+                        self.floodFill((start[0] + 2, start[1] - 2), state),
                     )
                 )
         # dole desno
@@ -615,7 +685,7 @@ class Board:
                     map(
                         lambda x, y: x + y,
                         result,
-                        self.floodFill((start[0] + 2, start[1] + 2)),
+                        self.floodFill((start[0] + 2, start[1] + 2), state),
                     )
                 )
 
