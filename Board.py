@@ -79,27 +79,21 @@ class Board:
 
         return adjustedIndex
 
-    def isEnd(self):
+    def isEnd(self, state):
         if (
-            self.current_x1 == self.start_o1
-            or self.current_x1 == self.start_o2
-            or self.current_x2 == self.start_o1
-            or self.current_x2 == self.start_o2
+            state["X"] == self.start_o1
+            or state["X"] == self.start_o2
+            or state["x"] == self.start_o1
+            or state["x"] == self.start_o2
         ):
-            print("")
-            print("Player X won!")
-            print("")
-            return True
+            return "X"
         if (
-            self.current_o1 == self.start_x1
-            or self.current_o1 == self.start_x2
-            or self.current_o2 == self.start_x1
-            or self.current_o2 == self.start_x2
+            state["O"] == self.start_x1
+            or state["O"] == self.start_x2
+            or state["o"] == self.start_x1
+            or state["o"] == self.start_x2
         ):
-            print("")
-            print("Player O won!")
-            print("")
-            return True
+            return "O"
         return False
 
     def showBoard(self, state):

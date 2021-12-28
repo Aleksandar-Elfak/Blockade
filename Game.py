@@ -125,11 +125,8 @@ class Game:
             self.playAIMove(move[0], move[1], move[2], posState)
             yield posState
 
-    def isEndAI(self):
-        return  # todo later
-
-    def isEnd(self):
-        return self.board.isEnd()
+    def isEnd(self, state):
+        return self.board.isEnd(state)
 
     def validParameters(self, pawn, move, wall):
         move = move.split(sep=" ")
@@ -221,9 +218,15 @@ class Game:
         else:
             return self.aiMove()
 
+    def MinMax(self, state, pc, depth, alpha, beta, move = None):
+        if self.isEnd() != False:
+            return None
+
+
     def play(self):
         self.showBoard(self.getState())
-        while self.isEnd() == False:
+        winner = False
+        while winner == False:
             #for s in self.possibleStates():  # predak min-maxa
                 # self.showBoard(s)
                 #None
@@ -244,3 +247,10 @@ class Game:
                 self.currentPlayer = self.player_x
             else:
                 self.currentPlayer = self.player_o
+
+            winner = self.isEnd()
+        
+        if winner == "X":
+            print("Player X has won.")
+        else:
+            print("Player O has won.")
