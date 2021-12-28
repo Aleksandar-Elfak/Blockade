@@ -207,6 +207,8 @@ class Board:
                     state["xBlueWall"] -= 1
                 else:
                     state["oBlueWall"] -= 1
+
+        state["CP"] = "X" if state["CP"] == "O" else "O"
         return state
 
     def changeState(self, pawn, move, wall):
@@ -405,6 +407,16 @@ class Board:
 
         # pokusaj pomeranja za jedno polje
         if abs(currentPosition[0] - move[0]) + abs(currentPosition[1] - move[1]) == 2:
+
+            if (
+                (move[0] == 0 and currentPosition[0] == 2)
+                or (move[0] == self.row - 1 and currentPosition[0] == self.row - 3)
+                or (move[1] == 0 and currentPosition[1] == 2)
+                or (
+                    move[1] == self.column - 1 and currentPosition[1] == self.column - 3
+                )
+            ):
+                return False
 
             path = self.getPath(currentPosition, move)
             if (

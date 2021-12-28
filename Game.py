@@ -256,21 +256,21 @@ class Game:
             if end == "O":
                 return 1000
 
-        return (
-            100
-            - min(
-                abs((pawns[0][0] - finish[0][0]) + (pawns[0][1] - finish[0][1])),
-                abs((pawns[1][0] - finish[0][0]) + (pawns[1][1] - finish[0][1])),
-                abs((pawns[0][0] - finish[1][0]) + (pawns[0][1] - finish[1][1])),
-                abs((pawns[1][0] - finish[1][0]) + (pawns[1][1] - finish[1][1])),
-            )
-            + max(
-                abs((enemy[0][0] - start[0][0]) + (enemy[0][1] - start[0][1])),
-                abs((enemy[1][0] - start[0][0]) + (enemy[1][1] - start[0][1])),
-                abs((enemy[0][0] - start[1][0]) + (enemy[0][1] - start[1][1])),
-                abs((enemy[1][0] - start[1][0]) + (enemy[1][1] - start[1][1])),
-            )
+        a = min(
+            abs((pawns[0][0] - finish[0][0])) + abs((pawns[0][1] - finish[0][1])),
+            abs((pawns[1][0] - finish[0][0])) + abs((pawns[1][1] - finish[0][1])),
+            abs((pawns[0][0] - finish[1][0])) + abs((pawns[0][1] - finish[1][1])),
+            abs((pawns[1][0] - finish[1][0])) + abs((pawns[1][1] - finish[1][1])),
         )
+
+        b = min(
+            abs((enemy[0][0] - start[0][0])) + abs((enemy[0][1] - start[0][1])),
+            abs((enemy[1][0] - start[0][0])) + abs((enemy[1][1] - start[0][1])),
+            abs((enemy[0][0] - start[1][0])) + abs((enemy[0][1] - start[1][1])),
+            abs((enemy[1][0] - start[1][0])) + abs((enemy[1][1] - start[1][1])),
+        )
+
+        return 100 - a + b
 
     def MinMax(self, state, npc, depth, alpha, beta, move=None):
         winner = self.isEnd(state)

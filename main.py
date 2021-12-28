@@ -83,7 +83,7 @@ def startGame():
     #     ai = "X"
 
     # game = Game(boardRow, boardColumn, X.split(" "), x.split(" "), O.split(" "), o.split(" "), walls, player, ai)
-    game = Game(11, 14, ("4", "4"), ("4", "8"), ("8", "4"), ("8", "8"), 9, "x", "O")
+    game = Game(7, 10, ("2", "2"), ("2", "9"), ("6", "2"), ("6", "9"), 6, "x", "O")
     game.play()
 
 
