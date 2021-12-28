@@ -207,6 +207,7 @@ class Board:
                     state["xBlueWall"] -= 1
                 else:
                     state["oBlueWall"] -= 1
+        return state
 
     def changeState(self, pawn, move, wall):
         currentPosition = None
@@ -481,7 +482,7 @@ class Board:
                         print("Invalid move[c]: Path to the finish is blocked.")
                     return False
                 return True
-                
+
         if pc:
             print("Invalid move[i]: Pawn's jump is blocked by a wall.")
         return False

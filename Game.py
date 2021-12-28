@@ -11,9 +11,10 @@ class Game:
     player_o = None
     currentPlayer = None
     round_num = 0
+    ai = None
 
     def __init__(
-        self, row, column, start_x1, start_x2, start_o1, start_o2, num_wall, pc
+        self, row, column, start_x1, start_x2, start_o1, start_o2, num_wall, pc, ai
     ):
         self.board = Board(row, column, start_x1, start_x2, start_o1, start_o2)
         # kompjuter i covek
@@ -23,6 +24,7 @@ class Game:
         self.player_x = Player(num_wall, True, "X")
         self.player_o = Player(num_wall, True, "O")
         self.currentPlayer = self.player_x
+        self.ai = ai
 
     def showBoard(self, state):
         self.board.showBoard(state)
@@ -100,8 +102,8 @@ class Game:
                 if self.validMove(pawn1, jump, None, state):
                     yield (pawn2, jump, None)
 
-    def playAIMove(self, pawn, jump, wall, state):
-        self.board.playAIMove(pawn, jump, wall, state)
+    def playAIMove(self, move, state):
+        return self.board.playAIMove(move[0], move[1], move[2], state)
 
     def getState(self):
         return {
@@ -117,8 +119,7 @@ class Game:
             "CP": self.currentPlayer.sign,
         }
 
-    def possibleStates(self):
-        state = self.getState()
+    def possibleStates(self, state):
 
         for move in self.possibleMoves(state):
             posState = copy.deepcopy(state)
@@ -218,18 +219,102 @@ class Game:
         else:
             return self.aiMove()
 
-    def MinMax(self, state, pc, depth, alpha, beta, move = None):
-        if self.isEnd() != False:
-            return None
+    def gradeState(self, state):
+        finish = None
+        start = None
+        pawns = None
+        end = self.isEnd(state)
 
+        if self.ai == "X":
+            finish = (self.board.start_o1, self.board.start_o2)
+            start = (self.board.start_x1, self.board.start_x2)
+            pawns = (state["X"], state["x"])
+            enemy = (state["O"], state["o"])
+            if end == "X":
+                return 1000
+            if end == "O":
+                return 0
+        else:
+            finish = (self.board.start_x1, self.board.start_x2)
+            start = (self.board.start_o1, self.board.start_o2)
+            pawns = (state["O"], state["o"])
+            enemy = (state["X"], state["x"])
+            if end == "X":
+                return 0
+            if end == "O":
+                return 1000
+
+        return (
+            100
+            - min(
+                abs((pawns[0][0] - finish[0][0]) + (pawns[0][1] - finish[0][1])),
+                abs((pawns[1][0] - finish[0][0]) + (pawns[1][1] - finish[0][1])),
+                abs((pawns[0][0] - finish[1][0]) + (pawns[0][1] - finish[1][1])),
+                abs((pawns[1][0] - finish[1][0]) + (pawns[1][1] - finish[1][1])),
+            )
+            + max(
+                abs((enemy[0][0] - start[0][0]) + (enemy[0][1] - start[0][1])),
+                abs((enemy[1][0] - start[0][0]) + (enemy[1][1] - start[0][1])),
+                abs((enemy[0][0] - start[1][0]) + (enemy[0][1] - start[1][1])),
+                abs((enemy[1][0] - start[1][0]) + (enemy[1][1] - start[1][1])),
+            )
+        )
+
+    def MinMax(self, state, npc, depth, alpha, beta, move=None):
+        winner = self.isEnd(state)
+        if winner != False:
+            return (move, self.gradeState(state))
+
+        if depth == 0:
+            return (move, self.gradeState(state))
+
+        ps = self.possibleMoves(state)
+
+        if ps is None or len(ps) == 0:
+            return (move, self.gradeState(state))
+
+        if npc:
+            for s in ps:
+                alpha = max(
+                    alpha,
+                    self.MinMax(
+                        self.playAIMove(s, copy.deepcopy(state)),
+                        True if npc == False else False,
+                        depth - 1,
+                        alpha,
+                        beta,
+                        s,
+                    ),
+                    key=lambda x: x[1],
+                )
+                if alpha[1] >= beta[1]:
+                    return beta
+            return alpha
+        else:
+            for s in ps:
+                beta = min(
+                    beta,
+                    self.MinMax(
+                        self.playAIMove(s, copy.deepcopy(state)),
+                        True if npc == False else False,
+                        depth - 1,
+                        alpha,
+                        beta,
+                        s,
+                    ),
+                    key=lambda x: x[1],
+                )
+                if beta[1] <= alpha[1]:
+                    return alpha
+            return beta
 
     def play(self):
         self.showBoard(self.getState())
         winner = False
         while winner == False:
-            #for s in self.possibleStates():  # predak min-maxa
-                # self.showBoard(s)
-                #None
+            # for s in self.possibleStates(self.getState()):  # predak min-maxa
+            # self.showBoard(s)
+            # None
 
             print(
                 "Round: "
@@ -249,7 +334,7 @@ class Game:
                 self.currentPlayer = self.player_o
 
             winner = self.isEnd()
-        
+
         if winner == "X":
             print("Player X has won.")
         else:
