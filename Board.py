@@ -347,6 +347,8 @@ class Board:
             ]
 
     def validMove(self, pawn, move, wall, state, pc=False):
+        if move[0] < 0 or move[0] >= self.row or move[1] < 0 or move[1] >= self.column:
+            return False
 
         valid = None
         currentPosition = (
