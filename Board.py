@@ -346,8 +346,8 @@ class Board:
         ):
             return [
                 (currentPosition[0] - 1, currentPosition[1]),
-                (currentPosition[0] - 1, currentPosition[1] - 2),
                 (currentPosition[0] - 2, currentPosition[1] - 1),
+                (currentPosition[0] - 1, currentPosition[1] - 2),
                 (currentPosition[0], currentPosition[1] - 1),
             ]
 

@@ -224,9 +224,9 @@ class Game:
     def play(self):
         self.showBoard(self.getState())
         while self.isEnd() == False:
-            for s in self.possibleStates():  # predak min-maxa
+            #for s in self.possibleStates():  # predak min-maxa
                 # self.showBoard(s)
-                None
+                #None
 
             print(
                 "Round: "
