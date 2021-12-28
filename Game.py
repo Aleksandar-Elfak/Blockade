@@ -22,7 +22,8 @@ class Game:
         # self.player_o = Player(num_wall, True if pc == "O" or pc == "o" else False, "O")
         # dva coveka
         self.player_x = Player(num_wall, True, "X")
-        self.player_o = Player(num_wall, True, "O")
+        self.player_o = Player(num_wall, False, "O")
+        # self.player_o = Player(num_wall, True, "O")
         self.currentPlayer = self.player_x
         self.ai = ai
 
@@ -170,7 +171,10 @@ class Game:
         return self.board.validMove(pawn, move, wall, state)
 
     def aiMove(self):
-        print("AI MOVE")
+        move = self.MinMax(self.getState(), True, 1, (None, -1), (None, 1001))
+        self.board.changeState(move[0][0], move[0][1], move[0][2])
+        self.showBoard(self.getState())
+        return True
 
     def reduceWall(self, wall):
         if wall[0] == "G":
@@ -215,6 +219,13 @@ class Game:
 
     def makeAMove(self):
         if self.currentPlayer.pc:
+            print(
+                "Round: "
+                + str(self.round_num + 1)
+                + " It's player "
+                + self.currentPlayer.sign
+                + "'s turn."
+            )
             return self.humanMove()
         else:
             return self.aiMove()
@@ -223,6 +234,7 @@ class Game:
         finish = None
         start = None
         pawns = None
+        enemy = None
         end = self.isEnd(state)
 
         if self.ai == "X":
@@ -268,7 +280,7 @@ class Game:
         if depth == 0:
             return (move, self.gradeState(state))
 
-        ps = self.possibleMoves(state)
+        ps = list(self.possibleMoves(state))
 
         if ps is None or len(ps) == 0:
             return (move, self.gradeState(state))
@@ -312,17 +324,6 @@ class Game:
         self.showBoard(self.getState())
         winner = False
         while winner == False:
-            # for s in self.possibleStates(self.getState()):  # predak min-maxa
-            # self.showBoard(s)
-            # None
-
-            print(
-                "Round: "
-                + str(self.round_num + 1)
-                + " It's player "
-                + self.currentPlayer.sign
-                + "'s turn."
-            )
 
             while self.makeAMove() == False:
                 print("")
@@ -333,7 +334,7 @@ class Game:
             else:
                 self.currentPlayer = self.player_o
 
-            winner = self.isEnd()
+            winner = self.isEnd(self.getState())
 
         if winner == "X":
             print("Player X has won.")
