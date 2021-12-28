@@ -76,9 +76,14 @@ def startGame():
     #     if not (player == "O" or player == "o"):
     #         print("You must choose X or O")
     #         return False
+    # ai = None
+    # if player == "X" or player == "x":
+    #     ai = "O"
+    # else:
+    #     ai = "X"
 
-    # game = Game(boardRow, boardColumn, X.split(" "), x.split(" "), O.split(" "), o.split(" "), walls, player)
-    game = Game(11, 14, ("4", "4"), ("4", "8"), ("8", "4"), ("8", "8"), 9, "x")
+    # game = Game(boardRow, boardColumn, X.split(" "), x.split(" "), O.split(" "), o.split(" "), walls, player, ai)
+    game = Game(11, 14, ("4", "4"), ("4", "8"), ("8", "4"), ("8", "8"), 9, "x", "O")
     game.play()
 
 

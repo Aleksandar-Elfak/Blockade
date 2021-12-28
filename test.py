@@ -1,8 +1,2 @@
-matrix = 2
 
-
-def getState(mat = "DADAD"):
-    print(mat)
-
-getState()
-getState("aFFA")
+print(max([1, 2, 3,4 ]))
