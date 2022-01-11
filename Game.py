@@ -24,11 +24,11 @@ class Game:
     ):
         self.board = Board(row, column, start_x1, start_x2, start_o1, start_o2)
         # kompjuter i covek
-        # self.player_x = Player(num_wall, True if pc == "X" or pc == "x" else False, "X")
-        # self.player_o = Player(num_wall, True if pc == "O" or pc == "o" else False, "O")
+        self.player_x = Player(num_wall, True if pc == "X" or pc == "x" else False, "X")
+        self.player_o = Player(num_wall, True if pc == "O" or pc == "o" else False, "O")
         # dva coveka
-        self.player_x = Player(num_wall, True, "X")
-        self.player_o = Player(num_wall, False, "O")
+        # self.player_x = Player(num_wall, True, "X")
+        # self.player_o = Player(num_wall, False, "O")
         # self.player_o = Player(num_wall, True, "O")
         self.currentPlayer = self.player_x
         self.ai = ai
@@ -187,9 +187,9 @@ class Game:
         return self.board.validMove(pawn, move, wall, state)
 
     def aiMove(self):
-        print(str(round(time.time() * 1000)) + " Start")
+        # print(str(round(time.time() * 1000)) + " Start")
         move = self.MinMax(self.getState(), True, 1, (None, -1), (None, 1001))
-        print(str(round(time.time() * 1000)) + " End")
+        # print(str(round(time.time() * 1000)) + " End")
         self.board.changeState(move[0][0], move[0][1], move[0][2])
         self.showBoard(self.getState())
         return True
@@ -460,7 +460,7 @@ class Game:
         while winner == False:
 
             while self.makeAMove() == False:
-                print("")
+                pass
 
             self.round_num += 1
             if self.round_num % 2 == 0:

@@ -43,11 +43,11 @@ def tryParse(par):
 def startGame():
 
     boardRow = tryParse(input("Input number of rows: "))
-    if boardRow < 11 or boardRow > 22:
+    if boardRow < 7 or boardRow > 22:
         print("Invalid rows")
         return False
     boardColumn = tryParse(input("Input number of columns: "))
-    if boardColumn < 14 or boardColumn > 28:
+    if boardColumn < 10 or boardColumn > 28:
         print("Invalid columns")
         return False
 
@@ -68,7 +68,7 @@ def startGame():
         print("invalid position")
         return False
     walls = tryParse(input("Number of walls: "))
-    if walls < 9 or walls > 18:
+    if walls < 6 or walls > 18:
         print("Invalid number")
         return False
     player = input("Choose X or O: ")
