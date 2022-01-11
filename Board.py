@@ -1,4 +1,5 @@
 import copy
+import time
 
 verticalWall = "ǁ"
 horisontalWall = "═"
@@ -33,7 +34,7 @@ class Board:
             [" " if y % 2 == 0 else "|" for y in range(0, column * 2 - 1)]
             if x % 2 == 0
             else ["—" if y % 2 == 0 else " " for y in range(0, column * 2 - 1)]
-            for x in range(0, row * 2)
+            for x in range(0, row * 2 - 1)
         ]
         self.matrix[self.start_x1[0]][self.start_x1[1]] = "X"
         self.matrix[self.start_o1[0]][self.start_o1[1]] = "O"
@@ -246,7 +247,6 @@ class Board:
                 self.matrix[wall[1] + 1][wall[2] + 2] = "═"
 
     def validParameters(self, move, wall):
-
         adjustedMove = self.adjustIndex(move)
         if adjustedMove[0] == -1 or adjustedMove[1] == -1:
             print("Invalid input[a1]: Pawn coordinates are not valid.")
@@ -350,7 +350,7 @@ class Board:
 
     def validMove(self, pawn, move, wall, state, pc=False):
         if move[0] < 0 or move[0] >= self.row or move[1] < 0 or move[1] >= self.column:
-            return False
+            return 10
 
         valid = None
         currentPosition = (
@@ -369,6 +369,21 @@ class Board:
             finish = (self.start_o1, self.start_o2)
         else:
             finish = (self.start_x1, self.start_x2)
+
+        # da li se na nasem putu nalazi zid
+        # da li se krecemo horizontalno
+
+        # da li se na move vec nalazi neki igrac
+        # da li se nalazi neka oznaka na tom mestu u matrici
+        if (
+            state["matrix"][move[0]][move[1]] == "x"
+            or state["matrix"][move[0]][move[1]] == "X"
+            or state["matrix"][move[0]][move[1]] == "o"
+            or state["matrix"][move[0]][move[1]] == "O"
+        ) and (move != finish[0] and move != finish[1]):
+            if pc:
+                print("Invalid move[d]: Pawn can not be moved on a taken space.")
+            return 10
 
         # provera da li je slobodno mesto za zid
         if wall != None:
@@ -390,24 +405,10 @@ class Board:
                         print("Invalid move[b]: There is already a wall on that spot.")
                     return False
 
-        # da li se na nasem putu nalazi zid
-        # da li se krecemo horizontalno
-
-        # da li se na move vec nalazi neki igrac
-        # da li se nalazi neka oznaka na tom mestu u matrici
-        if (
-            state["matrix"][move[0]][move[1]] == "x"
-            or state["matrix"][move[0]][move[1]] == "X"
-            or state["matrix"][move[0]][move[1]] == "o"
-            or state["matrix"][move[0]][move[1]] == "O"
-        ) and (move != finish[0] and move != finish[1]):
-            if pc:
-                print("Invalid move[d]: Pawn can not be moved on a taken space.")
-            return False
-
         # pokusaj pomeranja za jedno polje
-        if abs(currentPosition[0] - move[0]) + abs(currentPosition[1] - move[1]) == 2:
 
+        # pomeranje van opsega
+        if abs(currentPosition[0] - move[0]) + abs(currentPosition[1] - move[1]) == 2:
             if (
                 (move[0] == 0 and currentPosition[0] == 2)
                 or (move[0] == self.row - 1 and currentPosition[0] == self.row - 3)
@@ -416,7 +417,7 @@ class Board:
                     move[1] == self.column - 1 and currentPosition[1] == self.column - 3
                 )
             ):
-                return False
+                return 10
 
             path = self.getPath(currentPosition, move)
             if (
@@ -425,15 +426,17 @@ class Board:
             ):
                 if pc:
                     print("Invalid move[e]: Pawn is blocked by a wall.")
-                return False
+                return 10
 
             # da li je sledece polje zapravo ciljno polje
             if move == finish[0] or move == finish[1]:
                 self.playAIMove(pawn, move, wall, statePath)
-                if self.blockedPath(statePath) == False:
+                if self.blockedPath(statePath, wall) == False:
+                    # print(str(round(time.time() * 1000)) + " flood end")
                     if pc:
                         print("Invalid move[c]: Path to the finish is blocked.")
                     return False
+                # print(str(round(time.time() * 1000)) + " flood end")
                 return True
 
             if (
@@ -442,7 +445,7 @@ class Board:
             ):
                 if pc:
                     print("Invalid move[f]: Pawn can not be moved only one space.")
-                return False
+                return 10
 
             # da li se na dva polja nalazi protivnicki igrac
             if (
@@ -452,20 +455,22 @@ class Board:
                 or path[2] == state["o"]
             ):
                 self.playAIMove(pawn, move, wall, statePath)
-                if self.blockedPath(statePath) == False:
+                if self.blockedPath(statePath, wall) == False:
+                    # print(str(round(time.time() * 1000)) + " flood end")
                     if pc:
                         print("Invalid move[c]: Path to the finish is blocked.")
                     return False
+                # print(str(round(time.time() * 1000)) + " flood end")
                 return True
             if pc:
                 print("Invalid move[g]: Pawn can not be moved only one space.")
-            return False
+            return 10
 
         # da li se pomeramo za dva mesta
         if abs(currentPosition[0] - move[0]) + abs(currentPosition[1] - move[1]) != 4:
             if pc:
                 print("Invalid move[h]: Pawn must be moved two spaces.")
-            return False
+            return 10
 
         path = self.getPath(currentPosition, move)
 
@@ -476,10 +481,12 @@ class Board:
             and state["matrix"][path[1][0]][path[1][1]] != "ǁ"
         ):
             self.playAIMove(pawn, move, wall, statePath)
-            if self.blockedPath(statePath) == False:
+            if self.blockedPath(statePath, wall) == False:
+                # print(str(round(time.time() * 1000)) + " flood end")
                 if pc:
                     print("Invalid move[c]: Path to the finish is blocked.")
                 return False
+            # print(str(round(time.time() * 1000)) + " flood end")
             return True
 
         if len(path) == 4:
@@ -491,23 +498,94 @@ class Board:
                 and state["matrix"][path[3][0]][path[3][1]] != "ǁ"
             ):
                 self.playAIMove(pawn, move, wall, statePath)
-                if self.blockedPath(statePath) == False:
+                if self.blockedPath(statePath, wall) == False:
+                    # print(str(round(time.time() * 1000)) + " flood end")
+                    print()
                     if pc:
                         print("Invalid move[c]: Path to the finish is blocked.")
                     return False
+                # print(str(round(time.time() * 1000)) + " flood end")
                 return True
 
         if pc:
             print("Invalid move[i]: Pawn's jump is blocked by a wall.")
-        return False
+        return 10
 
-    def blockedPath(self, state):
+    def blockedPath(self, state, wall):
         # pawnX == result[0]
         # pawnO == result[1]
         # targetX == result[2]
         # targetO == result[3]
-
         # oblast u koju se nalazi cilj za 0
+
+        # print(str(round(time.time() * 1000)) + " flood start")
+
+        if wall[0] == "G":
+            num = 0
+            if wall[1] == 0:
+                num += 1
+
+            if wall[1] != self.row - 3:
+                if (
+                    state["matrix"][wall[1] + 3][wall[2]] == horisontalWall
+                    or state["matrix"][wall[1] + 3][wall[2] + 2] == horisontalWall
+                    or state["matrix"][wall[1] + 4][wall[2] + 1] == verticalWall
+                ):
+                    num += 1
+
+            if wall[1] == self.row - 3:
+                num += 1
+
+            if wall[1] != 0:
+                if (
+                    state["matrix"][wall[1] - 1][wall[2]] == horisontalWall
+                    or state["matrix"][wall[1] - 1][wall[2] + 2] == horisontalWall
+                    or state["matrix"][wall[1] - 2][wall[2] + 1] == verticalWall
+                ):
+                    num += 1
+
+            if (
+                state["matrix"][wall[1] + 1][wall[2]] == horisontalWall
+                or state["matrix"][wall[1] + 1][wall[2] + 2] == horisontalWall
+            ):
+                num += 1
+
+            if num < 2:
+                return True
+
+        elif wall[0] == "B":
+            num = 0
+            if wall[2] == 0:
+                num += 1
+
+            if wall[2] != self.column - 3:
+                if (
+                    state["matrix"][wall[1]][wall[2] + 3] == verticalWall
+                    or state["matrix"][wall[1] + 2][wall[2] + 3] == verticalWall
+                    or state["matrix"][wall[1] + 1][wall[2] + 4] == horisontalWall
+                ):
+                    num += 1
+
+            if wall[2] == self.column - 3:
+                num += 1
+
+            if wall[2] != 0:
+                if (
+                    state["matrix"][wall[1]][wall[2] - 1] == verticalWall
+                    or state["matrix"][wall[1] + 2][wall[2] - 1] == verticalWall
+                    or state["matrix"][wall[1] + 1][wall[2] - 2] == horisontalWall
+                ):
+                    num += 1
+
+            if (
+                state["matrix"][wall[1]][wall[2] + 1] == verticalWall
+                or state["matrix"][wall[1] + 2][wall[2] + 1] == verticalWall
+            ):
+                num += 1
+
+            if num < 2:
+                return True
+
         result = self.floodFill(self.start_x1, state)
 
         # da li su u oblast u koju se nalazi cilj za 0 svi pesaci i ciljevi oxa
