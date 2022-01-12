@@ -112,7 +112,7 @@ class Game:
                     elif valid:
                         yield (pawn2, jump, wall)
             else:
-                if self.validMove(pawn1, jump, None, state) == True:
+                if self.validMove(pawn2, jump, None, state) == True:
                     yield (pawn2, jump, None)
 
     def playAIMove(self, move, state):
@@ -163,7 +163,7 @@ class Game:
             if (wall[0] == "G" and self.currentPlayer.green_leftover == 0) or (
                 wall[0] == "B" and self.currentPlayer.blue_leftover == 0
             ):
-                print("You have no walls remaining.")
+                print("You have no walls of that color remaining.")
                 return False
 
         if not (self.round_num % 2 == 0 and (pawn == "X" or pawn == "x")):
@@ -191,6 +191,11 @@ class Game:
         move = self.MinMax(self.getState(), True, 1, (None, -1), (None, 1001))
         # print(str(round(time.time() * 1000)) + " End")
         self.board.changeState(move[0][0], move[0][1], move[0][2])
+        if move[0][2] != None:
+            self.reduceWall(move[0][2][0])
+        print()
+        print("AI's Blue walls left: " + str(self.currentPlayer.blue_leftover))
+        print("AI's Green walls left: " + str(self.currentPlayer.green_leftover))
         self.showBoard(self.getState())
         return True
 
@@ -201,7 +206,8 @@ class Game:
             self.currentPlayer.blue_leftover -= 1
 
     def humanMove(self):
-
+        print("Blue walls left: " + str(self.currentPlayer.blue_leftover))
+        print("Green walls left: " + str(self.currentPlayer.green_leftover))
         pawn = input("Select your pawn: ")
         move = input("Input coordinates of you move: ")
         wallNum = True
@@ -314,7 +320,7 @@ class Game:
 
             for n in neighbor:
                 next_cost = state[2] + 1
-                if n in visited and visited[n] >= next_cost:
+                if n in visited and visited[n] <= next_cost:
                     continue
                 fringe.append(
                     (n, [state[0]] + state[1], next_cost, heuristic(n[0], n[1]))
@@ -387,24 +393,43 @@ class Game:
             self.simpleMatrixThread[8][2],
             8,
         )
-        shortX = min(
+        shortYA = min(
             len(self.heurThread[1]),
-            len(self.heurThread[2]),
             len(self.heurThread[3]),
+        )
+
+        shortYB = min(
+            len(self.heurThread[2]),
             len(self.heurThread[4]),
         )
-        shortY = min(
+
+        shortXA = min(
             len(self.heurThread[5]),
-            len(self.heurThread[6]),
             len(self.heurThread[7]),
+        )
+
+        shortXB = min(
+            len(self.heurThread[6]),
             len(self.heurThread[8]),
         )
 
         # print(str(shortX) + " " + str(shortY))
-        if state["CP"] == "X":
-            return 500 - shortX + shortY
+        if state["CP"] == "O":
+            return (
+                500
+                - min(shortXA, shortXB) * 1.1
+                - max(shortXA, shortXB) * 0.15
+                + min(shortYA, shortYB)
+                + max(shortYA, shortYB) * 0.1
+            )
         else:
-            return 500 - shortY + shortX
+            return (
+                500
+                - min(shortYA, shortYB) * 1.1
+                - max(shortYA, shortYB) * 0.15
+                + min(shortXA, shortXB)
+                + max(shortXA, shortXB) * 0.1
+            )
 
     def MinMax(self, state, npc, depth, alpha, beta, move=None):
         winner = self.isEnd(state)

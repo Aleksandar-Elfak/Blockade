@@ -251,11 +251,6 @@ class Board:
         if adjustedMove[0] == -1 or adjustedMove[1] == -1:
             print("Invalid input[a1]: Pawn coordinates are not valid.")
             return False
-        adjustedWall = self.adjustIndex((wall[1], wall[2]))
-        if adjustedWall[0] == -1 or adjustedWall[1] == -1:
-            print("Invalid input[a2]: Wall coordinates are not valid.")
-            return False
-        adjustedWall = (wall[0], adjustedWall[0], adjustedWall[1])
 
         # provera indeksa u obliku broja
         if not (adjustedMove[0] != None and adjustedMove[0] < self.row):
@@ -266,13 +261,22 @@ class Board:
             print("Invalid input[a4]: Pawn coordinates are not valid.")
             return False
 
-        if not (adjustedWall[1] != None and adjustedWall[1] < self.row - 2):
-            print("Invalid input[a5]: Wall coordinates are not valid.")
-            return False
+        adjustedWall = None
 
-        if not (adjustedWall[2] != None and adjustedWall[2] < self.column - 2):
-            print("Invalid input[a6]: Wall coordinates are not valid.")
-            return False
+        if wall != None:
+            adjustedWall = self.adjustIndex((wall[1], wall[2]))
+            if adjustedWall[0] == -1 or adjustedWall[1] == -1:
+                print("Invalid input[a2]: Wall coordinates are not valid.")
+                return False
+            adjustedWall = (wall[0], adjustedWall[0], adjustedWall[1])
+
+            if not (adjustedWall[1] != None and adjustedWall[1] < self.row - 2):
+                print("Invalid input[a5]: Wall coordinates are not valid.")
+                return False
+
+            if not (adjustedWall[2] != None and adjustedWall[2] < self.column - 2):
+                print("Invalid input[a6]: Wall coordinates are not valid.")
+                return False
 
         return (adjustedMove, adjustedWall)
 
@@ -385,9 +389,9 @@ class Board:
                 print("Invalid move[d]: Pawn can not be moved on a taken space.")
             return 10
 
+        statePath = copy.deepcopy(state)
         # provera da li je slobodno mesto za zid
         if wall != None:
-            statePath = copy.deepcopy(state)
             if wall[0] == "G":
                 if (
                     state["matrix"][wall[1]][wall[2] + 1] == "ǁ"
@@ -431,12 +435,13 @@ class Board:
             # da li je sledece polje zapravo ciljno polje
             if move == finish[0] or move == finish[1]:
                 self.playAIMove(pawn, move, wall, statePath)
-                if self.blockedPath(statePath, wall) == False:
+                if wall != None:
+                    if self.blockedPath(statePath, wall) == False:
+                        # print(str(round(time.time() * 1000)) + " flood end")
+                        if pc:
+                            print("Invalid move[c]: Path to the finish is blocked.")
+                        return False
                     # print(str(round(time.time() * 1000)) + " flood end")
-                    if pc:
-                        print("Invalid move[c]: Path to the finish is blocked.")
-                    return False
-                # print(str(round(time.time() * 1000)) + " flood end")
                 return True
 
             if (
@@ -455,12 +460,13 @@ class Board:
                 or path[2] == state["o"]
             ):
                 self.playAIMove(pawn, move, wall, statePath)
-                if self.blockedPath(statePath, wall) == False:
+                if wall != None:
+                    if self.blockedPath(statePath, wall) == False:
+                        # print(str(round(time.time() * 1000)) + " flood end")
+                        if pc:
+                            print("Invalid move[c]: Path to the finish is blocked.")
+                        return False
                     # print(str(round(time.time() * 1000)) + " flood end")
-                    if pc:
-                        print("Invalid move[c]: Path to the finish is blocked.")
-                    return False
-                # print(str(round(time.time() * 1000)) + " flood end")
                 return True
             if pc:
                 print("Invalid move[g]: Pawn can not be moved only one space.")
@@ -481,12 +487,13 @@ class Board:
             and state["matrix"][path[1][0]][path[1][1]] != "ǁ"
         ):
             self.playAIMove(pawn, move, wall, statePath)
-            if self.blockedPath(statePath, wall) == False:
+            if wall != None:
+                if self.blockedPath(statePath, wall) == False:
+                    # print(str(round(time.time() * 1000)) + " flood end")
+                    if pc:
+                        print("Invalid move[c]: Path to the finish is blocked.")
+                    return False
                 # print(str(round(time.time() * 1000)) + " flood end")
-                if pc:
-                    print("Invalid move[c]: Path to the finish is blocked.")
-                return False
-            # print(str(round(time.time() * 1000)) + " flood end")
             return True
 
         if len(path) == 4:
@@ -498,13 +505,14 @@ class Board:
                 and state["matrix"][path[3][0]][path[3][1]] != "ǁ"
             ):
                 self.playAIMove(pawn, move, wall, statePath)
-                if self.blockedPath(statePath, wall) == False:
+                if wall != None:
+                    if self.blockedPath(statePath, wall) == False:
+                        # print(str(round(time.time() * 1000)) + " flood end")
+                        print()
+                        if pc:
+                            print("Invalid move[c]: Path to the finish is blocked.")
+                        return False
                     # print(str(round(time.time() * 1000)) + " flood end")
-                    print()
-                    if pc:
-                        print("Invalid move[c]: Path to the finish is blocked.")
-                    return False
-                # print(str(round(time.time() * 1000)) + " flood end")
                 return True
 
         if pc:
