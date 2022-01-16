@@ -18,9 +18,10 @@ class Game:
     currentPlayer = None
     round_num = 0
     ai = None
+    depthValue = None
 
     def __init__(
-        self, row, column, start_x1, start_x2, start_o1, start_o2, num_wall, pc, ai
+        self, row, column, start_x1, start_x2, start_o1, start_o2, num_wall, pc, ai, depth
     ):
         self.board = Board(row, column, start_x1, start_x2, start_o1, start_o2)
         # kompjuter i covek
@@ -32,6 +33,7 @@ class Game:
         # self.player_o = Player(num_wall, True, "O")
         self.currentPlayer = self.player_x
         self.ai = ai
+        self.depthValue = depth
 
     def showBoard(self, state):
         self.board.showBoard(state)
@@ -188,11 +190,11 @@ class Game:
 
     def aiMove(self):
         # print(str(round(time.time() * 1000)) + " Start")
-        move = self.MinMax(self.getState(), True, 1, (None, -1), (None, 1001))
+        move = self.MinMax(self.getState(), True, self.depthValue, (None, -1), (None, 1001))
         # print(str(round(time.time() * 1000)) + " End")
-        self.board.changeState(move[0][0], move[0][1], move[0][2])
+        self.board.changeState(move[2][0], move[2][1], move[2][2])
         if move[0][2] != None:
-            self.reduceWall(move[0][2][0])
+            self.reduceWall(move[2][2][0])
         print()
         print("AI's Blue walls left: " + str(self.currentPlayer.blue_leftover))
         print("AI's Green walls left: " + str(self.currentPlayer.green_leftover))
@@ -431,18 +433,22 @@ class Game:
                 + max(shortXA, shortXB) * 0.1
             )
 
-    def MinMax(self, state, npc, depth, alpha, beta, move=None):
+    def MinMax(self, state, npc, depth, alpha, beta, move=None, nextMove=None):
         winner = self.isEnd(state)
+
+        if nextMove is None:
+            nextMove = move
+
         if winner != False:
-            return (move, self.gradeState(state))
+            return (move, self.gradeState(state), nextMove)
 
         if depth == 0:
-            return (move, self.gradeState(state))
+            return (move, self.gradeState(state), nextMove)
 
         ps = list(self.possibleMoves(state))
 
         if ps is None or len(ps) == 0:
-            return (move, self.gradeState(state))
+            return (move, self.gradeState(state), nextMove)
 
         if npc:
             for s in ps:
@@ -455,6 +461,7 @@ class Game:
                         alpha,
                         beta,
                         s,
+                        nextMove,
                     ),
                     key=lambda x: x[1],
                 )
@@ -472,6 +479,7 @@ class Game:
                         alpha,
                         beta,
                         s,
+                        nextMove,
                     ),
                     key=lambda x: x[1],
                 )

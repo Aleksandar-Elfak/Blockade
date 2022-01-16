@@ -68,7 +68,7 @@ def startGame():
         print("invalid position")
         return False
     walls = tryParse(input("Number of walls: "))
-    if walls < 6 or walls > 18:
+    if walls < 0 or walls > 18:
         print("Invalid number")
         return False
     player = input("Choose X or O: ")
@@ -82,6 +82,11 @@ def startGame():
     else:
         ai = "X"
 
+    depth = tryParse(input("Input depth value (1 or 3): "))
+    if depth != 1 or depth != 3:
+        print("Invalid depth")
+        return False
+
     game = Game(
         boardRow,
         boardColumn,
@@ -92,6 +97,7 @@ def startGame():
         walls,
         player,
         ai,
+        depth,
     )
     # game = Game(7, 10, ("2", "2"), ("2", "9"), ("6", "2"), ("6", "9"), 6, "x", "O")
     game.play()
