@@ -83,7 +83,7 @@ def startGame():
         ai = "X"
 
     depth = tryParse(input("Input depth value (1 or 3): "))
-    if depth != 1 or depth != 3:
+    if depth != 1 and depth != 3:
         print("Invalid depth")
         return False
 
