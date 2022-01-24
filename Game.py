@@ -18,7 +18,6 @@ class Game:
     currentPlayer = None
     round_num = 0
     ai = None
-    depthValue = None
 
     def __init__(
         self,
@@ -31,7 +30,6 @@ class Game:
         num_wall,
         pc,
         ai,
-        depth,
     ):
         self.board = Board(row, column, start_x1, start_x2, start_o1, start_o2)
         # kompjuter i covek
@@ -43,7 +41,6 @@ class Game:
         # self.player_o = Player(num_wall, True, "O")
         self.currentPlayer = self.player_x
         self.ai = ai
-        self.depthValue = depth
 
     def showBoard(self, state):
         self.board.showBoard(state)
@@ -204,7 +201,7 @@ class Game:
             self.getState(),
             True,
             1
-            if self.player_o.blue_leftover > 0 or self.self.player_o.green_leftover > 0
+            if self.player_o.blue_leftover > 0 or self.player_o.green_leftover > 0
             else 3,
             (None, -1),
             (None, 1001),
@@ -305,18 +302,18 @@ class Game:
         height = len(matrix)
 
         heuristic = lambda i, j: abs(finish[0] - i) + abs(finish[1] - j)
-        comp = lambda state: state[2] + state[3]  # get the total cost
+        comp = lambda state: state[2] + state[3]  # dobijanje ukupne cene
 
-        # small variation for easier code, state is (coord_tuple, previous, path_cost, heuristic_cost)
+        # (coord_tuple, previous, path_cost, heuristic_cost)
         fringe = [((start[0], start[1]), list(), 0, heuristic(start[0], start[1]))]
-        visited = {}  # empty set
-        # maybe limit to prevent too long search
+        visited = {}
+
         while True:
-            # get first state (least cost)
+            # uzimanje stanja sa najmanjom cenom
             state = fringe[0]
             fringe.pop(0)
 
-            # goal check
+            # provera kraja
             (i, j) = state[0]
             if matrix[i][j] == 3:
                 path = [state[0]] + state[1]
@@ -324,10 +321,8 @@ class Game:
                 self.heurThread[index] = path
                 return
 
-            # set the cost (path is enough since the heuristic won't change)
             visited[(i, j)] = state[2]
 
-            # explore neighbor
             neighbor = list()
             if i > 1 and matrix[i - 1][j] > 0:  # top
                 neighbor.append((i - 2, j))
@@ -346,14 +341,7 @@ class Game:
                     (n, [state[0]] + state[1], next_cost, heuristic(n[0], n[1]))
                 )
 
-            # resort the list (SHOULD use a priority queue here to avoid re-sorting all the time)
             fringe.sort(key=comp)
-        state = fringe[0]
-        (i, j) = state[0]
-
-        path = [state[0]] + state[1]
-        path.reverse()
-        self.heurThread[index] = path
 
     def gradeState(self, state):
         self.transformMatrix(state, self.board.start_x1, state["O"], 1)
