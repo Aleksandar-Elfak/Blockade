@@ -21,7 +21,17 @@ class Game:
     depthValue = None
 
     def __init__(
-        self, row, column, start_x1, start_x2, start_o1, start_o2, num_wall, pc, ai, depth
+        self,
+        row,
+        column,
+        start_x1,
+        start_x2,
+        start_o1,
+        start_o2,
+        num_wall,
+        pc,
+        ai,
+        depth,
     ):
         self.board = Board(row, column, start_x1, start_x2, start_o1, start_o2)
         # kompjuter i covek
@@ -190,7 +200,15 @@ class Game:
 
     def aiMove(self):
         # print(str(round(time.time() * 1000)) + " Start")
-        move = self.MinMax(self.getState(), True, self.depthValue, (None, -1), (None, 1001))
+        move = self.MinMax(
+            self.getState(),
+            True,
+            1
+            if self.player_o.blue_leftover > 0 or self.self.player_o.green_leftover > 0
+            else 3,
+            (None, -1),
+            (None, 1001),
+        )
         # print(str(round(time.time() * 1000)) + " End")
         self.board.changeState(move[2][0], move[2][1], move[2][2])
         if move[0][2] != None:
